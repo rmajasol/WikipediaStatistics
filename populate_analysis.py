@@ -113,16 +113,14 @@ def create_table(table_name):
 # populo la tabla con los datos del _result.txt
 def txt_to_table(table_name):
 	global path
-	f = open(path + "tmp_" + table_name + "_result.txt")
-	l = f.readline()
+	txt_filename = path + "tmp_" + table_name + "_result.txt"
 	# si el fichero no tiene nada no hay nada que pasar a la BD
-	if l == "":
+	if is_empty(txt_filename):
 		return
 	# http://stackoverflow.com/questions/3971541/what-file-and-directory-permissions-are-required-for-mysql-load-data-infile
 	# http://www.markhneedham.com/blog/2011/01/18/mysql-the-used-command-is-not-allowed-with-this-mysql-version/
-	txt_file = path + "tmp_" + table_name + "_result.txt"
 	global query
-	query = "LOAD DATA LOCAL INFILE '" + txt_file + "' INTO TABLE " + \
+	query = "LOAD DATA LOCAL INFILE '" + txt_filename + "' INTO TABLE " + \
 		table_name + txt_year + " IGNORE 1 LINES;"
 	write_query(table_name + "_load")
 	sql_file = path + "tmp_" + table_name + "_load.sql"
