@@ -2,3 +2,5 @@ config.cfg
 .DS_Store
 *.svn*
 /wikisquilter/*
+.tags_sorted_by_file
+.tags

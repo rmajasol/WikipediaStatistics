@@ -143,18 +143,18 @@ def populate(table_name):
 
 
 #
-#	POPULAR VISITEDXXXX
+#	POPULA VISITEDXXXX
 #
 populate('visited')
 
 
 #
-#	POPULAR SAVEDXXXX
+#	POPULA SAVEDXXXX
 #
 populate('saved')
 
 
 #
-#	POPULAR ACTIONSXXXX
+#	POPULA ACTIONSXXXX
 #
 populate('actions')
