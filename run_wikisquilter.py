@@ -1,29 +1,37 @@
 #!/usr/bin/python
 
 import os
-import ConfigParser
 import subprocess
 import time
 import signal
+from config_helper import Config
 
 
 # ejecutamos wikisquilter sobre el log de la fecha dada
-def run_wsq(date):
-	# Leemos del archivo de configuracion 'config.cfg'
-	cfg = ConfigParser.ConfigParser()
-	cfg.read(["config.cfg"])
-	USER = cfg.get("bd_connection", "user")
-	PASS = cfg.get("bd_connection", "pass")
-	LOGS_DIR = cfg.get("other", "logs_dir")
+def run(date):
+
+	#
+	# probamos a procesar el log-20120615.gz
+	# date = date.replace(year=2012, month=06, day=15)
+
+	DB_USER = Config().get_db_user()
+	DB_PASS = Config().get_db_password()
+	DB_NAME = Config().get_db_name()
+	DB_HOST = Config().get_db_host()
+	DB_PORT = Config().get_db_port()
+
+	LOGS_DIR = Config().get_logs_dir()
 	LOG_FILENAME = "log-" + date.strftime('%Y%m%d') + ".gz"
 	LOG_MONTH = LOG_FILENAME[8:10]
 
+	# cambiamos al directorio /wikisquilter desde donde ejecutamos este script
 	os.chdir("wikisquilter")
 
 	cmd = "java -cp " + \
 		"./build/classes:./dist/lib/mysql-connector-java-5.1.5-bin.jar " + \
 		"wikisquilter.Main " + \
-		"'jdbc:mysql://localhost:3306/squidlogs' " + USER + " " + PASS + \
+		"'jdbc:mysql://" + DB_HOST + ":" + DB_PORT + "/" + \
+			DB_NAME + "' " + DB_USER + " " + DB_PASS + \
 		" AllRequests Filtered Searches " + \
 		"cfgWPFilter.xml " + \
 		LOGS_DIR + " -f " + LOG_FILENAME + " " + LOG_MONTH + " " + \
@@ -38,5 +46,5 @@ def run_wsq(date):
 	# print 'pid = ', pro.pid
 
 	# pondremos este script 10 segundos en espera y luego mataremos el wikisquilter
-	time.sleep(10)
+	time.sleep(100)
 	os.killpg(pro.pid, signal.SIGTERM)  # Send the signal to all the process groups

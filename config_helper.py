@@ -4,7 +4,7 @@ import ConfigParser
 # creamos esta clase como helper para interactuar con el fichero de configuracion
 class Config(object):
 
-	CONFIG_FILE = "../config.cfg"
+	CONFIG_FILE = "config.cfg"
 
 	SECTION__DB_CONNECTION = "db_connection"
 
@@ -38,6 +38,12 @@ class Config(object):
 	def get_db_host(self):
 		return self.cfg.get(self.SECTION__DB_CONNECTION, "db_host")
 
+	def get_db_port(self):
+		return self.cfg.get(self.SECTION__DB_CONNECTION, "db_port")
+
 	# nos devuelve la ruta relativa hacia los archivos temporales
 	def get_tmp_dir(self):
 		return self.cfg.get("other", "tmp_dir")
+
+	def get_logs_dir(self):
+		return self.cfg.get("other", "logs_dir")
