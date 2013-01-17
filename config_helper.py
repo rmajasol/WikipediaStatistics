@@ -5,6 +5,9 @@ import ConfigParser
 class Config(object):
 
 	CONFIG_FILE = "../config.cfg"
+
+	SECTION__DB_CONNECTION = "db_connection"
+
 	cfg = ConfigParser.ConfigParser()
 
 	def __init__(self):
@@ -21,3 +24,20 @@ class Config(object):
 		f = open(self.CONFIG_FILE, "w")
 		self.cfg.write(f)
 		f.close()
+
+	# obtiene el nombre de usuario para conectar a la BD
+	def get_db_user(self):
+		return self.cfg.get(self.SECTION__DB_CONNECTION, "db_user")
+
+	def get_db_password(self):
+		return self.cfg.get(self.SECTION__DB_CONNECTION, "db_pass")
+
+	def get_db_name(self):
+		return self.cfg.get(self.SECTION__DB_CONNECTION, "db_name")
+
+	def get_db_host(self):
+		return self.cfg.get(self.SECTION__DB_CONNECTION, "db_host")
+
+	# nos devuelve la ruta relativa hacia los archivos temporales
+	def get_tmp_dir(self):
+		return self.cfg.get("other", "tmp_dir")

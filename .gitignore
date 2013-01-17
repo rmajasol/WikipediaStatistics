@@ -4,3 +4,4 @@ config.cfg
 /wikisquilter/*
 .tags_sorted_by_file
 .tags
+/sql_scripts
