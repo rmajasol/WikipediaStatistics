@@ -1,0 +1,1 @@
+select date(f_date_time), substr(dayname(f_date_time),1,2), f_action_id, f_lang_id, f_ns_id, count(*) from Filtered where f_action_id in (0, 1, 3, 4) group by date(f_date_time), f_action_id, f_lang_id, f_ns_id;

@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# -*- coding: utf8 -*- 
+# -*- coding: utf8 -*-
 
 
 # script principal que realiza todo el proceso de popular la BD
@@ -22,15 +22,12 @@ import run_wikisquilter
 
 # ejecuta toda la tarea para el dia dado
 def run(date):
+	print "Procesando dia: " + date.strftime('%Y%m%d')
 	# transferimos
-	transfer_log.run(date)
+	#transfer_log.run(date)
 
 	# ejecutamos wsq
 	run_wikisquilter.run(date)
-
-	# interrumpimos la ejecucion para solamente probar la ejecucion de wsq
-	# import sys
-	# sys.exit()
 
 	# populamos analysis con resultados
 	import populate_analysis
@@ -47,7 +44,7 @@ if today == 1:
 	for i in range(20, top_day + 1):
 		date = date.replace(day=i)  # http://docs.python.org/2/library/datetime.html
 		run(date)
-elif today == 17:
+elif today == 19:
 	date -= timedelta(9)
 	for i in range(0, 9):
 		run(date)

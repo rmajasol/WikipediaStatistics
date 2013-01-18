@@ -1,4 +1,5 @@
 #!/usr/bin/python
+# -*- coding: utf8 -*-
 
 import os
 import subprocess
@@ -12,7 +13,7 @@ def run(date):
 
 	#
 	# probamos a procesar el log-20120615.gz
-	# date = date.replace(year=2012, month=06, day=15)
+	date = date.replace(year=2012, month=06, day=15)
 
 	DB_USER = Config().get_db_user()
 	DB_PASS = Config().get_db_password()
@@ -46,5 +47,9 @@ def run(date):
 	# print 'pid = ', pro.pid
 
 	# pondremos este script 10 segundos en espera y luego mataremos el wikisquilter
-	time.sleep(100)
+	time.sleep(10)
 	os.killpg(pro.pid, signal.SIGTERM)  # Send the signal to all the process groups
+
+	# vuelvo al directorio padre para que no haya problema a la hora de
+	# ejecutar el siguiente módulo, ya que para ejecutar wikisquilter estábamos en /wikisquilter
+	os.chdir("..")

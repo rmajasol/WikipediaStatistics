@@ -8,7 +8,7 @@ DB_PASS = Config().get_db_password()
 DB_NAME = Config().get_db_name()
 DB_HOST = Config().get_db_host()
 TMP_DIR = Config().get_tmp_dir()
-TMP_SQL = "tmp_clear_squidlogs.sql"
+SQL_FILE = TMP_DIR + "clear_squidlogs.sql"
 
 query = "DROP DATABASE IF EXISTS " + DB_NAME + ";" + \
 		"CREATE DATABASE " + DB_NAME + " DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;" + \
@@ -18,9 +18,9 @@ query = "DROP DATABASE IF EXISTS " + DB_NAME + ";" + \
 			"TO '" + DB_USER + "'@'%' WITH GRANT OPTION ;"
 
 # escribimos la query en un .sql temporal
-f = open(TMP_DIR + "tmp_clear_squidlogs.sql", "w")
+f = open(SQL_FILE, "w")
 f.write(query)
 f.close()
 
 os.system("mysql -u " + DB_USER + " -p" + DB_PASS + \
-	" < " + TMP_DIR + TMP_SQL)
+	" < " + SQL_FILE)
