@@ -1,1 +1,1 @@
-LOAD DATA LOCAL INFILE 'tmp/actions_wsq_result.txt' INTO TABLE actions2012 IGNORE 1 LINES;
+LOAD DATA LOCAL INFILE 'tmp/actions_wsq_result.txt' INTO TABLE actions2013 IGNORE 1 LINES;

@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS visited2012;CREATE TABLE visited2012 (day DATE,dayWeek VARCHAR(2),lang VARCHAR(2),ns TINYINT,count int);alter table visited2012 add index (day, dayWeek, lang, ns);
+DROP TABLE IF EXISTS visited2013;CREATE TABLE visited2013 (day DATE,dayWeek VARCHAR(2),lang VARCHAR(2),ns TINYINT,count int);alter table visited2013 add index (day, dayWeek, lang, ns);

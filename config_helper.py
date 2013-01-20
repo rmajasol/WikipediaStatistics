@@ -45,5 +45,8 @@ class Config(object):
 	def get_tmp_dir(self):
 		return self.cfg.get("other", "tmp_dir")
 
+	def get_test_logs_dir(self):
+		return self.cfg.get("other", "test_logs_dir")
+
 	def get_logs_dir(self):
 		return self.cfg.get("other", "logs_dir")

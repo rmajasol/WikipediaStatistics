@@ -1,13 +1,18 @@
 #!/usr/bin/python
 
 import os
+from config_helper import Config
 
 
+# se crea archivo ~/transferred_logs/log-[año][mes][dia].gz con el texto
+# "Log generado para el dia [año][mes][dia]"
 def crear_log(anio, mes, dia):
-	filename = "~/logs/log-" + anio + mes + dia + ".gz"
+	transferred_logs_dir = Config().get_logs_dir()
+	filename = transferred_logs_dir + "log-" + anio + mes + dia + ".gz"
 	os.system("touch " + filename)
 	texto = "Log generado para el dia " + anio + mes + dia
 	os.system("echo '" + texto + "' > " + filename)
+
 
 fInicio = 2009
 fFin = 2012

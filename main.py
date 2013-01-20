@@ -15,14 +15,17 @@
 
 
 from datetime import date, timedelta
+import logging
 
 import transfer_log
 import run_wikisquilter
+import populate_analysis
+import clear_squidlogs
 
 
 # ejecuta toda la tarea para el dia dado
 def run(date):
-	print "Procesando dia: " + date.strftime('%Y%m%d')
+	logging.info("Procesando día: " + date.strftime('%Y%m%d'))
 	# transferimos
 	#transfer_log.run(date)
 
@@ -30,56 +33,40 @@ def run(date):
 	run_wikisquilter.run(date)
 
 	# populamos analysis con resultados
-	import populate_analysis
+	populate_analysis.run()
 
 	# vaciamos BD squidlogs
-	import clear_squidlogs
-
+	clear_squidlogs.run()
 
 date = date.today()
+
+# configuramos un logger para informarnos de la ejecucion en el archivo run[fecha].log
+logging.basicConfig(filename="run_logs/run-" + date.strftime('%Y%m%d') + ".log",
+	format='%(asctime)s - %(message)s',
+	level=logging.INFO)
+
+logging.info("********* COMENZANDO EJECUCIÓN ********* ")
+
 today = date.day
+
+# si hoy es el día 1 procesaremos los logs entre los días 20 y último día del mes anterior
 if today == 1:
 	date -= timedelta(1)
 	top_day = date.day
 	for i in range(20, top_day + 1):
 		date = date.replace(day=i)  # http://docs.python.org/2/library/datetime.html
 		run(date)
+
+# si hoy es 10 entonces se procesarán los logs entre el 1 y 9
 elif today == 19:
 	date -= timedelta(9)
 	for i in range(0, 9):
 		run(date)
 		date += timedelta(1)
+
+# si hoy es 20 se procesarán entre el 10 y el 19
 elif today == 20:
 	date -= timedelta(10)
 	for i in range(0, 10):
 		run(date)
 		date += timedelta(1)
-
-
-#print str(now.month)+"/"+str(now.day)+"/"+str(now.year) # 10/14/2012
-#print str(now.hour)+":"+str(now.minute)+":"+str(now.second) # 20:19:38
-
-# crea un .txt con la hora y lo mueve al 8
-#filename = "~/"+str(now.hour)+str(now.minute)+str(now.second)+".txt"
-#os.system("touch "+filename)
-#os.system("scp "+filename+" rmaja@193.146.26.8:")
-
-
-
-
-# from datetime import datetime
-# now = datetime.now()
-# print now			# 2012-10-14 20:19:38.804481
-# print now.year		# 2012
-# print now.month		# 10
-# print now.day		# 14
-# print str(now.month)+"/"+str(now.day)+"/"+str(now.year) # 10/14/2012
-# print str(now.hour)+":"+str(now.minute)+":"+str(now.second) # 20:19:38
-
-# crea un .txt con la hora y lo mueve al 8
-# filename = "~/"+str(now.hour)+str(now.minute)+str(now.second)+".txt"
-# os.system("touch "+filename)
-# os.system("scp "+filename+" rmaja@193.146.26.8:")
-
-# Para calcular la de ayer, restamos un dia
-#ayer = hoy + datetime.timedelta(days=-1)

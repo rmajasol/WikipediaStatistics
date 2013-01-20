@@ -2,8 +2,11 @@
 # -*- coding: utf8 -*-
 
 import os
+import shlex
+import subprocess
 from config_helper import Config
 import re
+import logging
 
 DB_USER = Config().get_db_user()
 DB_PASS = Config().get_db_password()
@@ -46,7 +49,7 @@ def err_file(table_name):
 	return TMP_DIR + table_name + "_wsq_result.err"
 
 
-# vuelca en _wsq_result.txt el resultado de la query a la BD squidlogs
+# vuelca en [table_name]_wsq_result.txt el resultado de la query a la BD squidlogs
 def wsq_to_txt(table_name):
 	global query
 	if(table_name == 'visited'):
@@ -68,11 +71,14 @@ def wsq_to_txt(table_name):
 	# escribe la query en el archivo tmp/[table_name]_wsq_query.sql
 	sql_file = create_sql_file(query, table_name, "wsq_query")
 
-	os.system("mysql -D squidlogs -u " + DB_USER + " -p" + DB_PASS + \
+	cmd = "mysql -D squidlogs -u " + DB_USER + " -p" + DB_PASS + \
 		" < " + sql_file + \
-		# vuelca resultado a tmp/[table_name]_wsq_query_result.txt y en .err
 		" > " + txt_file(table_name) + \
-		" 2>" + err_file(table_name))
+		" 2>" + err_file(table_name)
+
+	print "Creando txt a partir de la consulta " + table_name
+	args = shlex.split(cmd)
+	output, error = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
 
 # mira en el txt el año y si no hay creada una tabla para ese año devolverá True
@@ -117,8 +123,12 @@ def create_table(table_name):
 	# escribe la query en el archivo tmp/[table_name]_create.sql
 	sql_file = create_sql_file(query, table_name, "create")
 
-	os.system("mysql -D analysis -u " + DB_USER + " -p" + DB_PASS + \
-		" < " + sql_file)
+	cmd = "mysql -D analysis -u " + DB_USER + " -p" + DB_PASS + \
+		" < " + sql_file
+
+	print "Creando tabla " + table_name + txt_year
+	args = shlex.split(cmd)
+	output, error = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 
 	# actualizo el fichero de configuracion avisando que se creo la tabla para ese anio
 	Config().write("latest_tables", table_name, txt_year)
@@ -138,19 +148,27 @@ def txt_to_table(table_name, txt_year):
 	# tmp/[table]_txt_to_analysis.sql
 	sql_file = create_sql_file(query, table_name, "txt-to-analysis")
 
-	os.system("mysql --local-infile -D analysis -u " + DB_USER + " -p" + DB_PASS + \
-		" < " + sql_file)
+	cmd = "mysql --local-infile -D analysis -u " + DB_USER + " -p" + DB_PASS + \
+		" < " + sql_file
+
+	print "Volcando txt sobre tabla " + table_name + txt_year
+	args = shlex.split(cmd)
+	output, error = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+
 	# si dice acceso denegado hay que dar permiso: http://dev.mysql.com/doc/refman/5.0/es/access-denied.html
 	# GRANT FILE ON *.* TO 'ajreinoso'@'localhost';
 
 
 # hace todo el proceso para popular cada tabla
 def populate(table_name):
+	logging.info("Populando tabla: " + table_name + txt_year)
+	print "Populando tabla: " + table_name + txt_year
+
 	wsq_to_txt(table_name)
 
 	# si es un nuevo anio creo la nueva tabla visitedxxxx para el anio
 	if(not_created_table(table_name)):
-		print 'Tabla %s no creada. Creando...' % (table_name + txt_year)
+		logging.info("Tabla %s no creada. Creando...' % (table_name + txt_year)")
 		create_table(table_name)
 
 	txt_to_table(table_name, txt_year)
@@ -159,6 +177,7 @@ def populate(table_name):
 #
 #	POPULA VISITEDXXXX, SAVEDXXXX y ACTIONSXXXX
 #
-populate('visited')
-populate('saved')
-populate('actions')
+def run():
+	populate('visited')
+	populate('saved')
+	populate('actions')
