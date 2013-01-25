@@ -1,1 +1,0 @@
-LOAD DATA LOCAL INFILE 'tmp/tmp_actions_result.txt' INTO TABLE actions2012 IGNORE 1 LINES;
