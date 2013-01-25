@@ -16,6 +16,7 @@
 
 from datetime import date, timedelta
 import logging
+from config_helper import Config
 
 import transfer_log
 import run_wikisquilter
@@ -25,12 +26,12 @@ import clear_squidlogs
 
 # ejecuta toda la tarea para el dia dado
 def run(date):
-	logging.info("Procesando día: " + date.strftime('%Y%m%d'))
+	logging.info("---- Procesando día: " + date.strftime('%Y%m%d') + " ----")
 	# transferimos
 	#transfer_log.run(date)
 
 	# ejecutamos wsq
-	run_wikisquilter.run(date)
+	run_wikisquilter.run(date, test=True)
 
 	# populamos analysis con resultados
 	populate_analysis.run()
@@ -41,7 +42,8 @@ def run(date):
 date = date.today()
 
 # configuramos un logger para informarnos de la ejecucion en el archivo run[fecha].log
-logging.basicConfig(filename="run_logs/run-" + date.strftime('%Y%m%d') + ".log",
+RUN_LOGS_DIR = Config().get_run_logs_dir()
+logging.basicConfig(filename=RUN_LOGS_DIR + "run-" + date.strftime('%Y%m%d') + ".log",
 	format='%(asctime)s - %(message)s',
 	level=logging.INFO)
 
@@ -57,8 +59,8 @@ if today == 1:
 		date = date.replace(day=i)  # http://docs.python.org/2/library/datetime.html
 		run(date)
 
-# si hoy es 10 entonces se procesarán los logs entre el 1 y 9
-elif today == 19:
+# si hoy es 10 entonces se procesarán los logs entre los días 1 y 9
+elif today == 10:
 	date -= timedelta(9)
 	for i in range(0, 9):
 		run(date)

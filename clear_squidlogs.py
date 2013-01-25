@@ -1,8 +1,6 @@
 #!/usr/bin/python
 
-import os
 import subprocess
-import shlex
 from config_helper import Config
 
 
@@ -28,7 +26,5 @@ def run():
 
 	cmd = "mysql -u " + DB_USER + " -p" + DB_PASS + \
 		" < " + SQL_FILE
-	args = shlex.split(cmd)
-	output, error = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-	# os.system("mysql -u " + DB_USER + " -p" + DB_PASS + \
-	# 	" < " + SQL_FILE)
+
+	output, error = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()

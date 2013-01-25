@@ -1,4 +1,6 @@
+# ignoramos el fichero de configuracion
 config.cfg
+
 .DS_Store
 *.svn*
 /wikisquilter/*
@@ -6,3 +8,4 @@ config.cfg
 .tags
 /sql_scripts
 *.pyc
+/run_logs/*

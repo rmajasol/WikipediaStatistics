@@ -1,8 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-import os
-import shlex
 import subprocess
 from config_helper import Config
 import re
@@ -14,6 +12,13 @@ TMP_DIR = Config().get_tmp_dir()
 
 # indica el año del txt donde se vuelca el resultado de la query
 txt_year = ""
+
+
+# ejecuta un comando via shell y deja el script esperando a su finalización
+# para poder continuar
+def exec_proc(cmd):
+	output, error = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+	logging.info("Operación finalizada OK")
 
 
 # mira si un fichero esta vacio
@@ -76,9 +81,9 @@ def wsq_to_txt(table_name):
 		" > " + txt_file(table_name) + \
 		" 2>" + err_file(table_name)
 
-	print "Creando txt a partir de la consulta " + table_name
-	args = shlex.split(cmd)
-	output, error = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+	logging.info("Creando .txt a partir de la consulta a " + table_name + "..")
+
+	exec_proc(cmd)
 
 
 # mira en el txt el año y si no hay creada una tabla para ese año devolverá True
@@ -126,12 +131,14 @@ def create_table(table_name):
 	cmd = "mysql -D analysis -u " + DB_USER + " -p" + DB_PASS + \
 		" < " + sql_file
 
-	print "Creando tabla " + table_name + txt_year
-	args = shlex.split(cmd)
-	output, error = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+	logging.info("Tabla %s no creada. Creando.." % (table_name + txt_year))
+
+	exec_proc(cmd)
 
 	# actualizo el fichero de configuracion avisando que se creo la tabla para ese anio
+	logging.info("Cambiando año a %s para %s en config.cfg.." % (table_name, txt_year))
 	Config().write("latest_tables", table_name, txt_year)
+	logging.info("Operación finalizada OK")
 
 
 # populo la tabla con los datos del _result.txt
@@ -151,9 +158,9 @@ def txt_to_table(table_name, txt_year):
 	cmd = "mysql --local-infile -D analysis -u " + DB_USER + " -p" + DB_PASS + \
 		" < " + sql_file
 
-	print "Volcando txt sobre tabla " + table_name + txt_year
-	args = shlex.split(cmd)
-	output, error = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+	logging.info("Volcando txt sobre tabla " + table_name + txt_year + "..")
+
+	exec_proc(cmd)
 
 	# si dice acceso denegado hay que dar permiso: http://dev.mysql.com/doc/refman/5.0/es/access-denied.html
 	# GRANT FILE ON *.* TO 'ajreinoso'@'localhost';
@@ -161,17 +168,17 @@ def txt_to_table(table_name, txt_year):
 
 # hace todo el proceso para popular cada tabla
 def populate(table_name):
-	logging.info("Populando tabla: " + table_name + txt_year)
-	print "Populando tabla: " + table_name + txt_year
+	logging.info("Populando la tabla " + table_name + txt_year + "..")
 
 	wsq_to_txt(table_name)
 
 	# si es un nuevo anio creo la nueva tabla visitedxxxx para el anio
 	if(not_created_table(table_name)):
-		logging.info("Tabla %s no creada. Creando...' % (table_name + txt_year)")
 		create_table(table_name)
 
 	txt_to_table(table_name, txt_year)
+
+	logging.info("Tabla " + table_name + txt_year + " populada OK")
 
 
 #

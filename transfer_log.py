@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os
+import logging
 from config_helper import Config
 
 
@@ -12,4 +13,4 @@ def run(date):
 	log_name = "log-" + date.strftime('%Y%m%d') + ".gz"
 	os.system("scp" + " " + ORIGIN + log_name + " " + DESTINY)
 
-	print "Obteniendo " + log_name + " desde equipo remoto.."
+	logging.info("Obteniendo " + log_name + " desde equipo remoto..")
