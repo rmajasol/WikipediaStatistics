@@ -3,16 +3,13 @@
 
 import os
 from shutil import copy
-import subprocess
-# import shlex
-# import time
-# import signal
-import logging
-from config_helper import Config
+from helpers.config_helper import *
+from helpers.logging_helper import *
+from helpers.exec_helper import *
 
 
 # ejecutamos wikisquilter sobre el log de la fecha dada
-def run(date, test=False):
+def run(date, test):
 
 	DB_USER = Config().get_db_user()
 	DB_PASS = Config().get_db_password()
@@ -25,15 +22,19 @@ def run(date, test=False):
 	else:
 		LOGS_DIR = Config().get_logs_dir()
 
-	LOG_FILENAME = "log-" + date.strftime('%Y%m%d') + ".gz"
-	LOG_MONTH = LOG_FILENAME[8:10]
+	LOG_FILENAME = get_log_filename(date)
+	LOG_MONTH = get_log_month(LOG_FILENAME)
 
 	# cambiamos al directorio /wikisquilter desde donde ejecutamos este script
 	os.chdir("wikisquilter")
 
+	log_msg2("Ejecutando wikisquilter sobre " + LOG_FILENAME)
+
 	# copiamos el log a procesar a la carpeta wikisquilter/squidlogfiles
+	log_msg3("Copiando " + LOG_FILENAME + " a wikisquilter/squidlogfiles")
 	SQUIDLOGFILES_DIR = Config().get_squidlogsfiles_dir()
 	copy(LOGS_DIR + LOG_FILENAME, SQUIDLOGFILES_DIR)
+	log_msg_ok3()
 
 	# ejecutamos wikisquilter
 	cmd = "java -cp " + \
@@ -46,17 +47,17 @@ def run(date, test=False):
 		"./squidlogfiles -f " + LOG_FILENAME + " " + LOG_MONTH + " " + \
 		'sal33.txt err33.txt -d -f -i -r &'
 
-	logging.info("Ejecutando wikisquilter sobre: " + LOG_FILENAME)
-
-	# http://stackoverflow.com/questions/1996518/retrieving-the-output-of-subprocess-call
-	# Así hacemos para que este script espere a la finalización de wikisquilter
-	output, error = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-
-	logging.info(LOG_FILENAME + " procesado OK")
+	log_msg3("Ejecutando")
+	exec_proc(cmd)
+	log_msg_ok3()
 
 	# eliminamos el log procesado de la carpeta wikisquilter/squidlogfiles
+	log_msg3("Eliminando " + LOG_FILENAME + " de la carpeta squidlogfiles")
 	os.remove(SQUIDLOGFILES_DIR + "/" + LOG_FILENAME)
+	log_msg_ok3()
 
 	# vuelvo al directorio padre para que no haya problema a la hora de
 	# ejecutar el siguiente módulo, ya que para ejecutar wikisquilter estábamos en /wikisquilter
 	os.chdir("..")
+
+	log_msg_ok2()

@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-import subprocess
-from config_helper import Config
+from helpers.config_helper import *
+from helpers.logging_helper import *
 
 
 def run():
@@ -9,7 +9,7 @@ def run():
 	DB_PASS = Config().get_db_password()
 	DB_NAME = Config().get_db_name()
 	DB_HOST = Config().get_db_host()
-	TMP_DIR = Config().get_tmp_dir()
+	TMP_DIR = Config().get_dir_tmp()
 	SQL_FILE = TMP_DIR + "clear_squidlogs.sql"
 
 	query = "DROP DATABASE IF EXISTS " + DB_NAME + ";" + \
@@ -27,4 +27,6 @@ def run():
 	cmd = "mysql -u " + DB_USER + " -p" + DB_PASS + \
 		" < " + SQL_FILE
 
-	output, error = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+	log_msg2("Limpiando B.D. squidlogs")
+	exec_proc(cmd)
+	log_msg_ok2()
