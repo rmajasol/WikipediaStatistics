@@ -1,17 +1,13 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-# prueba para script clear_squidlogs
+# prueba para limpiar por completo la DB squidlogs
 
-import os
-
-print "1. " + os.getcwd()
-os.chdir("..")
-
-print "2. " + os.getcwd()
-# añadimos al PYTHONPATH /home/ramon/Dropbox/tfg/proyecto para así poder importar
-# el módulo clear_squidlogs, situado 1 nivel más arriba en el árbol de directorios
-import sys
-sys.path.append(os.getcwd())
+from test_helper import *
+from helpers.logging_helper import init_logger
 from clear_squidlogs import run
+
+
+init_logger("clear_squidlogs", test=True)
+
 run()

@@ -16,7 +16,7 @@ def main():
 	parser.add_argument('-m', '--manual',
 		nargs=2,
 		# http://argparse.googlecode.com/svn/trunk/doc/add_argument.html#metavar
-		metavar=('INIT_DATE', 'FINAL_DATE'),
+		metavar=('INITIAL_DATE', 'FINAL_DATE'),
 		# action="store_true",
 		dest="manual",
 		default=False,

@@ -1,1 +1,0 @@
-LOAD DATA LOCAL INFILE 'tmp/visited_wsq_result.txt' INTO TABLE visited2013 IGNORE 1 LINES;

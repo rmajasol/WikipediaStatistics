@@ -8,4 +8,5 @@ config.cfg
 .tags
 /sql_scripts
 *.pyc
-/run_logs/*
+/run_history/*
+/tmp/*

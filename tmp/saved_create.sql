@@ -1,1 +1,0 @@
-DROP TABLE IF EXISTS saved2013;CREATE TABLE saved2013 (day DATE,dayWeek VARCHAR(2),lang VARCHAR(2),ns TINYINT,count int);alter table saved2013 add index (day, dayWeek, lang, ns);

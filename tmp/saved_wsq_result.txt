@@ -1,3 +1,0 @@
-date(f_date_time)	substr(dayname(f_date_time),1,2)	f_lang_id	f_ns_id	count(*)
-2013-01-24	Th	EN	0	1
-2013-01-24	Th	PL	0	1

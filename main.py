@@ -14,16 +14,15 @@
 # 4. Vaciar la BD squidlogs -> clear_squidlogs.py
 
 # añadimos la carpeta raíz del proyecto al PYTHONPATH
-import os
-import sys
-sys.path.append(os.getcwd())
+# import os
+# import sys
+# sys.path.append(os.getcwd())
 
-import logging
 from datetime import datetime, timedelta
 from argparse import ArgumentParser
 
 from helpers.config_helper import *
-from helpers.logging_helper import log_msg
+from helpers.logging_helper import *
 
 import transfer_log
 import run_wikisquilter
@@ -31,26 +30,36 @@ import populate_analysis
 import clear_squidlogs
 
 
-# ejecuta toda la tarea para el dia dado
 def run_for_day(date):
+	"""
+	Ejecuta todas la tareas para procesar el día dado
+	"""
 	global test_mode
-	log_msg("---- Procesando día: " + date.strftime('%Y%m%d') + " ----")
+	processed = Config().is_processed_date(date, test_mode)
+	day = Config().get_log_date(date)
 
-	# transferimos
-	transfer_log.run(date, test_mode)
+	if not processed:
+		log_msg("---- Procesando día: " + day + " ----")
 
-	# ejecutamos wsq
-	run_wikisquilter.run(date, test_mode)
+		# transferimos
+		transfer_log.run(date, test_mode)
 
-	# populamos analysis con resultados
-	populate_analysis.run(date, test_mode)
+		# ejecutamos wsq
+		run_wikisquilter.run(date, test_mode)
 
-	# vaciamos BD squidlogs
-	clear_squidlogs.run()
+		# populamos analysis con resultados
+		populate_analysis.run(date, test_mode)
+
+		# vaciamos BD squidlogs
+		clear_squidlogs.run()
+	else:
+		log_msg("#### El día " + day + " ya fue procesado ####")
 
 
-# ejecución automática según el día en que haya sido invocado el script
 def run_auto():
+	"""
+	Ejecución automática según el día en que haya sido invocado el script
+	"""
 	global date
 	today = date.day
 
@@ -77,8 +86,10 @@ def run_auto():
 			date += timedelta(1)
 
 
-# ejecuta entre el día inicial y el día anterior al día final
 def run_manual(initial_date, final_date):
+	"""
+	Procesa días entre la fecha inicial y final
+	"""
 	i_year = int(initial_date[:4])
 	i_month = int(initial_date[4:6])
 	i_day = int(initial_date[6:])
@@ -112,8 +123,8 @@ parser.add_argument('-t', '--test',
 	help='Runs in test mode')
 parser.add_argument('-m', '--manual',
 	nargs=2,
+	# http://argparse.googlecode.com/svn/trunk/doc/add_argument.html#metavar
 	metavar=('INITIAL_DATE', 'FINAL_DATE'),
-	# action="store_true",
 	dest="manual",
 	default=False,
 	help='Manually process a certain volume of logs between 2 dates.\n' + \
@@ -127,22 +138,14 @@ manual_mode = True if args.manual else False
 
 
 # guardamos la fecha actual en 'date' con los demás valores seteados a 0
+# http://stackoverflow.com/questions/5476065/truncate-python-datetime
 now = datetime.now()
 now = now.replace(hour=0, minute=0, second=0, microsecond=0)
 date = now.date()
 
 
 # configuramos un logger para informarnos de la ejecucion en el archivo run[fecha].log
-if test_mode:
-	EXT = ".log"
-	log_msg("COMENZANDO PRUEBA..")
-else:
-	EXT = ".test.log"
-	log_msg("COMENZANDO EJECUCIÓN..")
-dir_r_h = Config().get_dir_run_history()
-logging.basicConfig(filename=dir_r_h + "run-" + date.strftime('%Y%m%d') + EXT,
-	format='%(asctime)s - %(message)s',
-	level=logging.INFO)
+init_logger("main", test=test_mode)
 
 
 # según estemos ejecutando en modo manual o no..

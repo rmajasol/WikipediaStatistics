@@ -18,21 +18,21 @@ def run(date, test):
 	DB_PORT = Config().get_db_port()
 
 	if test:
-		LOGS_DIR = Config().get_test_logs_dir()
+		LOGS_DIR = Config().get_dir_test_logs()
 	else:
-		LOGS_DIR = Config().get_logs_dir()
+		LOGS_DIR = Config().get_dir_logs()
 
-	LOG_FILENAME = get_log_filename(date)
-	LOG_MONTH = get_log_month(LOG_FILENAME)
+	LOG_FILENAME = Config().get_log_filename(date)
+	LOG_MONTH = Config().get_log_month(LOG_FILENAME)
 
 	# cambiamos al directorio /wikisquilter desde donde ejecutamos este script
-	os.chdir("wikisquilter")
+	os.chdir(Config().get_dir_wikisquilter())
 
 	log_msg2("Ejecutando wikisquilter sobre " + LOG_FILENAME)
 
 	# copiamos el log a procesar a la carpeta wikisquilter/squidlogfiles
-	log_msg3("Copiando " + LOG_FILENAME + " a wikisquilter/squidlogfiles")
-	SQUIDLOGFILES_DIR = Config().get_squidlogsfiles_dir()
+	log_msg3("Copiando " + LOG_FILENAME + " a /squidlogfiles")
+	SQUIDLOGFILES_DIR = Config().get_dir_squidlogfiles()
 	copy(LOGS_DIR + LOG_FILENAME, SQUIDLOGFILES_DIR)
 	log_msg_ok3()
 
@@ -52,12 +52,12 @@ def run(date, test):
 	log_msg_ok3()
 
 	# eliminamos el log procesado de la carpeta wikisquilter/squidlogfiles
-	log_msg3("Eliminando " + LOG_FILENAME + " de la carpeta squidlogfiles")
+	log_msg3("Eliminando " + LOG_FILENAME + " de /squidlogfiles")
 	os.remove(SQUIDLOGFILES_DIR + "/" + LOG_FILENAME)
 	log_msg_ok3()
 
 	# vuelvo al directorio padre para que no haya problema a la hora de
 	# ejecutar el siguiente módulo, ya que para ejecutar wikisquilter estábamos en /wikisquilter
-	os.chdir("..")
+	# os.chdir("..")
 
 	log_msg_ok2()
