@@ -9,23 +9,20 @@ from helpers.exec_helper import exec_proc
 
 # transfiere a ~/logs del remoto el log generado
 def transfer_to_remote(date):
-	ORIGIN = Config().get_test_logs_dir()
-	DESTINY = Config().read("hosts", "skynet_test")
+	local = Config().get_dir_test_logs()
+	remote = Config().get_dir_test_logs_remote()
+	log_name = Config.get_log_filename(date)
 
-	log_name = "log-" + date.strftime('%Y%m%d') + ".gz"
-
-	cmd = "scp " + ORIGIN + log_name + " " + DESTINY
+	cmd = "scp " + local + log_name + " " + remote
 
 	print "Subiendo " + log_name + " a equipo remoto.."
-
 	exec_proc(cmd)
-
 	print "Log " + log_name + " subido\n"
 
 
 d = date.today()
-d = d.replace(year=2013, month=1, day=1)
-d2 = d.replace(year=2013, month=3, day=1)
+d = d.replace(year=2012, month=1, day=30)
+d2 = d.replace(year=2013, month=2, day=1)
 
 # mientras que la fecha d sea menor a la final (d2)..
 while d < d2:

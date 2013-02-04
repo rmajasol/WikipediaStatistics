@@ -4,7 +4,7 @@
 import os
 import gzip
 from datetime import date, timedelta
-from config_helper import Config
+from helpers.config_helper import Config
 
 
 LINES_TO_WRITE = 100000
@@ -17,7 +17,8 @@ block_number = 0
 # escogidas a partir de ~/test_logs/log_lines con la fecha modificada a la indicada
 def crear_log(date):
 	global block_number
-	test_logs_dir = Config().get_test_logs_dir()
+	print "bloque " + block_number
+	test_logs_dir = Config().get_dir_test_logs()
 
 	# leemos el archivo con todas las líneas en texto plano
 	src_file = test_logs_dir + "log_lines"

@@ -23,10 +23,7 @@ def is_empty(filename):
 	mira si un fichero esta vacío
 	"""
 	f = open(filename)
-	if f.readline() == "":
-		return True
-	else:
-		return False
+	return f.readline() == ""
 
 
 def create_sql_file(query, table_name, query_type):
@@ -127,10 +124,7 @@ def not_created_table(table_name):
 		table_name = cfg_latest_table_name(table_name)
 		latest_table_year = Config().get_latest_table_year(table_name)
 
-		if (txt_year != latest_table_year):
-			return True
-		else:
-			return False
+		return txt_year != latest_table_year
 
 
 def create_table(table_name):

@@ -23,6 +23,7 @@ from argparse import ArgumentParser
 
 from helpers.config_helper import *
 from helpers.logging_helper import *
+from helpers.date_helper import *
 
 import transfer_log
 import run_wikisquilter
@@ -90,17 +91,9 @@ def run_manual(initial_date, final_date):
 	"""
 	Procesa días entre la fecha inicial y final
 	"""
-	i_year = int(initial_date[:4])
-	i_month = int(initial_date[4:6])
-	i_day = int(initial_date[6:])
 
-	f_year = int(final_date[:4])
-	f_month = int(final_date[4:6])
-	f_day = int(final_date[6:])
-
-	global date
-	i_date = date.replace(year=i_year, month=i_month, day=i_day)
-	f_date = date.replace(year=f_year, month=f_month, day=f_day)
+	i_date = str_to_date(initial_date)
+	f_date = str_to_date(final_date)
 
 	# mientras que la fecha d sea menor a la final (d2)..
 	while i_date <= f_date:
@@ -138,10 +131,7 @@ manual_mode = True if args.manual else False
 
 
 # guardamos la fecha actual en 'date' con los demás valores seteados a 0
-# http://stackoverflow.com/questions/5476065/truncate-python-datetime
-now = datetime.now()
-now = now.replace(hour=0, minute=0, second=0, microsecond=0)
-date = now.date()
+date = get_now_to_zero()
 
 
 # configuramos un logger para informarnos de la ejecucion en el archivo run[fecha].log

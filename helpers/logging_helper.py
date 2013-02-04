@@ -62,3 +62,8 @@ def log_msg_ok3():
 
 def log_msg_ok4():
 	logging.info(SEP_4 + OK)
+
+
+# mensaje de error
+def log_error_msg(error_msg):
+	logging.error(error_msg)

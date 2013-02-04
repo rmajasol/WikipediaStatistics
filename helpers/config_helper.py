@@ -112,7 +112,7 @@ class Config(object):
 	#
 	def get_processed_list_filename(self, test):
 		"""
-		Devuelve si la fecha dada ya está procesada
+		Devuelve ruta + nombre de archivo para la lista de logs ya procesados
 		"""
 		if test:
 			return self.base_path + "test/test_logs.processed"
@@ -120,6 +120,9 @@ class Config(object):
 			return self.base_path + "logs.processed"
 
 	def is_processed_date(self, date, test):
+		"""
+		Devuelve si la fecha dada ya está procesada
+		"""
 		# http://maengora.blogspot.com.es/2010/10/receta-python-buscar-una-cadena-de-un.html
 		filename = self.get_processed_list_filename(test)
 		f = open(filename)
@@ -138,6 +141,23 @@ class Config(object):
 		filename = self.get_processed_list_filename(test)
 		f = open(filename, "a")
 		f.write(log_date + "\n")
+		f.close()
+
+	def remove_from_processed_list(self, date, test):
+		"""
+		Quita una fecha de la lista de procesadas
+		"""
+		# http://stackoverflow.com/questions/5947833/deleting-a-line-from-a-file-in-python
+		filename = self.get_processed_list_filename(test)
+		f = open(filename)
+		output = []
+		for line in f:
+			d = self.get_log_date(date) + "\n"
+			if line != d:
+				output.append(line)
+		f.close()
+		f = open(filename, 'w')
+		f.writelines(output)
 		f.close()
 
 	#
@@ -162,6 +182,9 @@ class Config(object):
 		"""
 		return date.strftime('%Y%m%d')
 
+	#
+	# RUTAS
+	#
 	def get_base_path(self):
 		"""
 		Devuelve la ruta absoluta de la raíz del proyecto
