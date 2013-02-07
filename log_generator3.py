@@ -1,10 +1,11 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-from datetime import date, timedelta
+from datetime import timedelta
 from log_generator2 import crear_log
 from helpers.config_helper import Config
 from helpers.exec_helper import exec_proc
+from helpers.date_helper import get_now_to_zero
 
 
 # transfiere a ~/logs del remoto el log generado
@@ -20,12 +21,12 @@ def transfer_to_remote(date):
 	print "Log " + log_name + " subido\n"
 
 
-d = date.today()
+d = get_now_to_zero()
 d = d.replace(year=2012, month=1, day=30)
 d2 = d.replace(year=2013, month=2, day=1)
 
-# mientras que la fecha d sea menor a la final (d2)..
-while d < d2:
+# mientras que la fecha d sea menor o igual a la final (d2)..
+while d <= d2:
 	crear_log(d)
 	transfer_to_remote(d)
 	d += timedelta(1)

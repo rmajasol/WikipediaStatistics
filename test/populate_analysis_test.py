@@ -12,6 +12,6 @@ from populate_analysis import run
 
 init_logger("pop_analysis", test=True)
 
-day = date.today().replace(year=2013, month=01, day=10)
+day = date.today().replace(year=2013, month=01, day=11)
 
 run(day, test=True)

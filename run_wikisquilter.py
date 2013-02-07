@@ -13,7 +13,7 @@ def run(date, test):
 
 	DB_USER = Config().get_db_user()
 	DB_PASS = Config().get_db_password()
-	DB_NAME = Config().get_db_name()
+	DB_NAME = "squidlogs"
 	DB_HOST = Config().get_db_host()
 	DB_PORT = Config().get_db_port()
 

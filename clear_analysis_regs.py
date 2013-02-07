@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 from datetime import timedelta
 import sys
 
-from helpers.mysql_helper import mysql_query
+from helpers.mysql_helper import exec_mysql_query
 from helpers.config_helper import Config
 from helpers.date_helper import str_to_date
 
@@ -17,22 +17,18 @@ def del_query(table_name):
 	Ejecuta la query sobre una BD para eliminar los registros
 	de una tabla y fecha dada
 	"""
-	global i_date
-	where_clause = " WHERE day = '" + str(i_date) + "'"
 	# http://dev.mysql.com/doc/refman/5.0/en/delete.html
-	query = "DELETE FROM " + table_name + i_date.strftime('%Y') + where_clause
+	query = "DELETE FROM " + table_name + i_date.strftime('%Y') + \
+			" WHERE day = '" + str(i_date) + "'"
 
-	global database
-	mysql_query(database, query, "delete_rows")
+	exec_mysql_query(database, query)
 
 
-def delete_day():
+def delete_date():
 	"""
 	Mira en la lista de días procesados. Si existe el día elimina los registros
 	y borra el día en dicha lista de procesados.
 	"""
-	global i_date
-	global test_mode
 	if Config().is_processed_date(i_date, test_mode):
 		del_query("actions")
 		del_query("saved")
@@ -60,14 +56,13 @@ parser.add_argument(
 	metavar=('INITIAL_DATE', 'FINAL_DATE'),
 	dest="date",
 	default=False,
-	help='Delete regs from database between 2 dates')
+	help='Delete regs from database between 2 dates or just one')
 args = parser.parse_args()
 
-print args
 
 test_mode = True if args.test else False
-# date_mode = True if args.date else False
 
+# crea diálogo de confirmación en caso de no ejecutar en modo test
 if not test_mode:
 	ans = raw_input("WARNING: Not in test mode. Type 'analysis' to continue..\n")
 	if ans != 'analysis':
@@ -77,12 +72,11 @@ if not test_mode:
 
 database = "test_analysis" if test_mode else "analysis"
 
-i_date = str_to_date(args.date[0])
-
 if len(args.date) == 1:
-	delete_day()
+	delete_date()
 else:
+	i_date = str_to_date(args.date[0])
 	f_date = str_to_date(args.date[1])
 	while i_date <= f_date:
-		delete_day()
+		delete_date()
 		i_date += timedelta(1)

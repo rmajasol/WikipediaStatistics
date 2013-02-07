@@ -6,14 +6,17 @@ import sys
 from logging_helper import log_error_msg
 
 
-# import datetime
-
-
-# ejecuta un comando via shell y deja el script esperando a su finalización
-# para poder continuar
-# http://stackoverflow.com/questions/1996518/retrieving-the-output-of-subprocess-call
-# http://docs.python.org/2/library/subprocess.html#popen-objects
 def exec_proc(cmd):
+	"""
+	Ejecuta un proceso invocado por el comando 'cmd' del mismo modo
+	que si se hiciese vía shell y deja el script python esperando
+	a su finalización para poder continuar.
+
+	Si hubiera error escribimos el mensaje en el historial de ejecución
+	y detenemos la ejecución del script
+	http://stackoverflow.com/questions/1996518/retrieving-the-output-of-subprocess-call
+	http://docs.python.org/2/library/subprocess.html#popen-objects
+	"""
 
 	# start = datetime.datetime.now()
 

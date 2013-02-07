@@ -5,12 +5,16 @@ import os
 import sys
 
 
-# creamos esta clase como helper para interactuar con el fichero de configuracion
 class Config(object):
+	"""
+	Creamos esta clase como helper para interactuar con el fichero
+	de configuracion y realizar otras funciones de utilidad
+	"""
 
 	SECTION__HOSTS = "hosts"
 	SECTION__DB = "db"
 	SECTION__LATEST_TABLES = "latest_tables"
+	SECTION__LATEST_TABLES_TEST = "latest_tables_test"
 
 	cfg = ConfigParser.ConfigParser()
 
@@ -21,14 +25,15 @@ class Config(object):
 
 	def read(self, section, name):
 		"""
-		Lee el nombre de un párametro dentro de una sección en
+		Lee el nombre de un parámetro dentro de una sección en
 		el archivo de configuracion
 		"""
 		return self.cfg.get(section, name)
 
 	def write(self, section, name, value):
 		"""
-		Modifica un parámetro dentro de una sección en el archivo de configuración
+		Modifica un parámetro dentro de una sección en el archivo
+		de configuración
 		"""
 		self.cfg.set(section, name, value)
 		f = open(self.config_file, "w")
@@ -66,45 +71,81 @@ class Config(object):
 	#
 	# SECTION__LATEST_TABLES
 	#
-	def get_latest_table_year(self, table_name):
+	def get_section(self, test):
+		"""
+		Devuelve la sección "latest_tables_test" o "latest_tables"
+		según estemos en modo test o no.
+		"""
+		if test:
+			return self.SECTION__LATEST_TABLES_TEST
+		else:
+			return self.SECTION__LATEST_TABLES
+
+	def get_latest_table_year(self, table_name, test):
 		"""
 		Lee en el archivo de configuración el último año para el que
 		ya está creada la tabla
 		"""
-		return self.read(self.SECTION__LATEST_TABLES, table_name)
+		section = self.get_section(test)
+		return self.read(section, table_name)
 
-	def set_latest_table_year(self, table_name, year):
+	def set_latest_table_year(self, table_name, year, test):
 		"""
 		Escribe en el archivo de configuración el último año existente
 		para la tabla
 		"""
-		self.write(self.SECTION__LATEST_TABLES, table_name, year)
+		section = self.get_section(test)
+		self.write(section, table_name, year)
 
 	#
-	# Directorios
+	# Rutas absolutas
 	#
 	def get_dir_logs(self):
+		"""
+		Carpeta donde se encuentran los logs en el equipo local
+		"""
 		return self.base_path + "../../../logs/"
 
 	def get_dir_logs_remote(self):
+		"""
+		Dirección IP + ruta hacia los logs en el equipo remoto
+		"""
 		return self.get_host_remote() + ":~/logs/"
 
 	def get_dir_test_logs(self):
+		"""
+		Carpeta que contiene los logs de prueba
+		"""
 		return self.base_path + "../../../test_logs/"
 
 	def get_dir_test_logs_remote(self):
+		"""
+		IP + ruta para los logs de prueba en el equipo remoto
+		"""
 		return self.get_host_remote() + ":~/test_logs/"
 
 	def get_dir_tmp(self):
+		"""
+		Carpeta que contiene archivos temporales
+		"""
 		return self.base_path + "tmp/"
 
 	def get_dir_wikisquilter(self):
+		"""
+		Carpeta desde donde se ejecuta wikisquilter
+		"""
 		return self.base_path + "wikisquilter/"
 
 	def get_dir_squidlogfiles(self):
+		"""
+		Carpeta que aloja cada log a procesarse por wikisquilter
+		"""
 		return self.get_dir_wikisquilter() + "squidlogfiles/"
 
 	def get_dir_run_history(self):
+		"""
+		Carpeta donde van todos los historiales de ejecución
+		"""
 		return self.base_path + "run_history/"
 
 	#
@@ -183,14 +224,15 @@ class Config(object):
 		return date.strftime('%Y%m%d')
 
 	#
-	# RUTAS
+	# OTRAS
 	#
 	def get_base_path(self):
 		"""
-		Devuelve la ruta absoluta de la raíz del proyecto
+		Devuelve la ruta absoluta hacia la carpeta raíz del proyecto
 		http://stackoverflow.com/a/1296522/1260374
 		"""
-		dirname, filename = os.path.split(os.path.abspath(__file__))
+		dirname, filename = os.path.split(os.path.abspath(
+			__file__))
 		# puesto que estamos en /helpers subimos un directorio:
 		# http://docs.python.org/2/library/os.path.html
 		return os.path.join(dirname, '../')

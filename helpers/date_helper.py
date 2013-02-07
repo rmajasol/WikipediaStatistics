@@ -18,7 +18,8 @@ def get_now_to_zero():
 
 def str_to_date(str):
 	"""
-	Obtenemos un objeto de tipo 'date' a partir de un string YYYYMMDD
+	Obtenemos un objeto de tipo 'date' a partir de un string
+	con el formato de fecha YYYYMMDD
 	"""
 	date = get_now_to_zero()
 

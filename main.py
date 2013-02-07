@@ -2,23 +2,44 @@
 # -*- coding: utf8 -*-
 
 
-# script principal que realiza todo el proceso de popular la BD
+# Script principal que realiza todo el proceso de popular la BD
 # analysis a partir de los logs
 #
 #
-# Cada día 1, 10 y 20 de cada mes se realizan las siguiente serie de tareas:
+# Tenemos dos modos de ejecución:
 #
-# 1. Tansferir logs de días anteriores -> transfer_log.py
-# 2. Ejecutar wikisquilter sobre ellos -> run_wikisquilter.py
-# 3. Popular BD de analysis -> populate_analysis.py
-# 4. Vaciar la BD squidlogs -> clear_squidlogs.py
+# -> Automático:
+# 		Creamos cron:
+#			0 12 1,10,20 * * python /ruta/absoluta/hacia/main.py
+#
+# 		Así, a las 12:00 horas de cada día 1, 10 y 20 de cada mes
+#		se realizará la siguiente serie de tareas para procesar
+#		cada log:
+# 			1. Tansferir log: transfer_log.py
+# 			2. Ejecutar wikisquilter sobre él: run_wikisquilter.py
+# 			3. Popular BD analysis: populate_analysis.py
+# 			4. Vaciar BD squidlogs: clear_squidlogs.py
+#
+#		Según el día de ejecución se procesarán logs correspondientes
+#		a los días:
+#			Día 1: en mes anterior entre 20 - último día de mes
+#			Día 10: 1 - 9
+#			Día 20: 10 - 19
+#
+# -> Manual:
+# 		Ejecutamos "python main.py -m FECHA_INICIO FECHA_FIN"
+# 		para procesar logs entre dos fechas dadas.
+# 		Por ejemplo entre los días 1 y 20 de febrero de 2013:
+# 			python main.py -m 20130101 20130220
+#
+# Además, incluyendo la opción -t podemos indicar que se ejecute sólo
+# sobre logs de prueba, es decir, los generados usando el script
+# log_generator3.py
+# Por ejemplo, para procesar logs de prueba entre dos fechas:
+#		python main.py -t -m 20130101 20130220
 
-# añadimos la carpeta raíz del proyecto al PYTHONPATH
-# import os
-# import sys
-# sys.path.append(os.getcwd())
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from argparse import ArgumentParser
 
 from helpers.config_helper import *
@@ -35,12 +56,11 @@ def run_for_day(date):
 	"""
 	Ejecuta todas la tareas para procesar el día dado
 	"""
-	global test_mode
 	processed = Config().is_processed_date(date, test_mode)
 	day = Config().get_log_date(date)
 
 	if not processed:
-		log_msg("---- Procesando día: " + day + " ----")
+		log_msg("---- Procesando día " + day + " ----")
 
 		# transferimos
 		transfer_log.run(date, test_mode)
@@ -54,7 +74,7 @@ def run_for_day(date):
 		# vaciamos BD squidlogs
 		clear_squidlogs.run()
 	else:
-		log_msg("#### El día " + day + " ya fue procesado ####")
+		log_msg("#### No es necesario procesar el día " + day + " ####")
 
 
 def run_auto():
@@ -87,18 +107,21 @@ def run_auto():
 			date += timedelta(1)
 
 
-def run_manual(initial_date, final_date):
+def run_manual():
 	"""
-	Procesa días entre la fecha inicial y final
+	Si recibe 2 argumentos: Procesa días entre la fecha inicial y final
+	Si recibe un argumento: Procesa sólo ese día
 	"""
+	d = str_to_date(args.manual[0])
 
-	i_date = str_to_date(initial_date)
-	f_date = str_to_date(final_date)
-
-	# mientras que la fecha d sea menor a la final (d2)..
-	while i_date <= f_date:
-		run_for_day(i_date)
-		i_date += timedelta(1)
+	if len(args.manual) == 1:
+		run_for_day(d)
+	else:
+		d2 = str_to_date(args.manual[1])
+		# mientras que la fecha d sea menor a la final (d2)..
+		while d <= d2:
+			run_for_day(d)
+			d += timedelta(1)
 
 
 ###########################
@@ -115,13 +138,13 @@ parser.add_argument('-t', '--test',
 	default=False,
 	help='Runs in test mode')
 parser.add_argument('-m', '--manual',
-	nargs=2,
+	nargs='+',
 	# http://argparse.googlecode.com/svn/trunk/doc/add_argument.html#metavar
 	metavar=('INITIAL_DATE', 'FINAL_DATE'),
 	dest="manual",
 	default=False,
 	help='Manually process a certain volume of logs between 2 dates.\n' + \
-		'e.g. option_parser.py -m 20130101 20130327 -> ' + \
+		'e.g. main.py -m 20130101 20130327 -> ' + \
 		'This will process all logfiles between 1st Jan 2013 and 27th Mar 2013')
 args = parser.parse_args()
 
@@ -129,17 +152,14 @@ args = parser.parse_args()
 test_mode = True if args.test else False
 manual_mode = True if args.manual else False
 
-
-# guardamos la fecha actual en 'date' con los demás valores seteados a 0
-date = get_now_to_zero()
-
-
-# configuramos un logger para informarnos de la ejecucion en el archivo run[fecha].log
+# configuramos un logger para informarnos de la ejecucion en el archivo main-[fecha].log
 init_logger("main", test=test_mode)
 
+# guardamos la fecha actual en 'date' con los demás valores (hora, minuto..) seteados a 0
+date = get_now_to_zero()
 
 # según estemos ejecutando en modo manual o no..
 if manual_mode:
-	run_manual(args.manual[0], args.manual[1])
+	run_manual()
 else:
 	run_auto()
