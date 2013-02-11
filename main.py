@@ -63,7 +63,7 @@ def run_for_day(date):
 		log_msg("---- Procesando día " + day + " ----")
 
 		# transferimos
-		transfer_log.run(date, test_mode)
+		# transfer_log.run(date, test_mode)
 
 		# ejecutamos wsq
 		run_wikisquilter.run(date, test_mode)

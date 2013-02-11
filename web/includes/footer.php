@@ -1,5 +1,5 @@
 </body>
     <footer>
-        Administración tienda zapatos
+        Footer de la página
     </footer>
 </html>

@@ -13,8 +13,6 @@ class Config(object):
 
 	SECTION__HOSTS = "hosts"
 	SECTION__DB = "db"
-	SECTION__LATEST_TABLES = "latest_tables"
-	SECTION__LATEST_TABLES_TEST = "latest_tables_test"
 
 	cfg = ConfigParser.ConfigParser()
 
@@ -67,35 +65,6 @@ class Config(object):
 	#
 	def get_host_remote(self):
 		return self.read(self.SECTION__HOSTS, "remote")
-
-	#
-	# SECTION__LATEST_TABLES
-	#
-	def get_section(self, test):
-		"""
-		Devuelve la sección "latest_tables_test" o "latest_tables"
-		según estemos en modo test o no.
-		"""
-		if test:
-			return self.SECTION__LATEST_TABLES_TEST
-		else:
-			return self.SECTION__LATEST_TABLES
-
-	def get_latest_table_year(self, table_name, test):
-		"""
-		Lee en el archivo de configuración el último año para el que
-		ya está creada la tabla
-		"""
-		section = self.get_section(test)
-		return self.read(section, table_name)
-
-	def set_latest_table_year(self, table_name, year, test):
-		"""
-		Escribe en el archivo de configuración el último año existente
-		para la tabla
-		"""
-		section = self.get_section(test)
-		self.write(section, table_name, year)
 
 	#
 	# Rutas absolutas
@@ -172,6 +141,20 @@ class Config(object):
 			if l == self.get_log_date(date) + "\n":
 				return True
 		return False
+
+	def year_not_exists(self, year, test):
+		"""
+		Comprueba si no hay ningún log ya procesado para el año dado
+		"""
+		# http://maengora.blogspot.com.es/2010/10/receta-python-buscar-una-cadena-de-un.html
+		filename = self.get_processed_list_filename(test)
+		f = open(filename)
+		lines = f.readlines()
+		for l in lines:
+			l = l[:4]
+			if l == year:
+				return False
+		return True
 
 	def add_to_processed_list(self, date, test):
 		"""

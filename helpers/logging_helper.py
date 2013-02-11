@@ -29,7 +29,8 @@ def init_logger(module, test):
 		filename=filename,
 		format='%(asctime)s - %(message)s',
 		# http://docs.python.org/2/howto/logging.html#displaying-the-date-time-in-messages
-		datefmt='%H:%M:%S',
+		# http://docs.python.org/2/library/datetime.html#strftime-and-strptime-behavior
+		datefmt='%b-%d %H:%M',
 		level=logging.INFO,
 		filemode='w'
 	)

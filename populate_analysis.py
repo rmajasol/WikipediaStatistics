@@ -7,13 +7,13 @@ from helpers.logging_helper import *
 from helpers.mysql_helper import *
 
 db_name = ""
-DB_USER = Config().get_db_user()
-DB_PASS = Config().get_db_password()
-TMP_DIR = Config().get_dir_tmp()
-TXT_FILE = TMP_DIR + "dumped.txt"
+TXT_FILE = Config().get_dir_tmp() + "dumped.txt"
 
 # indica el año del txt donde se vuelca el resultado de la query a squidlogs
 txt_year = ""
+
+# indica si se crearon ya las tablas nuevas
+new_tables_created = False
 
 # indica si este módulo se ejecuta en modo test o no
 test_mode = False
@@ -30,7 +30,7 @@ def is_empty(filename):
 def get_table_name_year(table_name):
 	"""
 	Devuelve el nombre de la tabla junto con el año obtenido del .txt
-	que contiene los resultados de la query a squidlogs
+	generado por la query a squidlogs
 	"""
 	return table_name + txt_year
 
@@ -63,14 +63,14 @@ def wsq_to_txt(table_name):
 	log_msg_ok4()
 
 
-def not_created_table(table_name):
+def is_new_year(table_name):
 	"""
 	Mira en el txt el año y si no hay creada una tabla para ese
 	año devolverá True
 	"""
 	# si el fichero no tiene nada devolvemos False para no crear luego una tabla vacia
 	if is_empty(TXT_FILE):
-		log_msg4("result.txt vacío!!")
+		log_msg4("No se puede obtener el año del dump.txt vacío!!")
 		return False
 	else:
 		# si el fichero no está vacío lo leemos para comprobar el año
@@ -85,16 +85,15 @@ def not_created_table(table_name):
 		global txt_year
 		txt_year = m.group(1)
 
-		# indica el año de la tabla más reciente
-		latest_table_year = Config().get_latest_table_year(table_name, test_mode)
-
-		return txt_year != latest_table_year
+		# miramos si en la lista de procesados (logs.processed)
+		# aparece alguno ya procesado para el año del txt,
+		# lo cual quiere decir que ya existe la tabla
+		return Config().year_not_exists(txt_year, test_mode)
 
 
 def create_table(table_name):
 	"""
-	Crea la tabla y actualiza el config.cfg con el nuevo año para
-	el que ha sido creada
+	Crea nueva tabla
 	"""
 	table_name_year = get_table_name_year(table_name)
 	query = "DROP TABLE IF EXISTS " + table_name_year + ";" + \
@@ -112,15 +111,22 @@ def create_table(table_name):
 			");" + \
 			"alter table " + table_name_year + " add index (day, dayWeek, lang, ns);"
 
-	log_msg4("Tabla " + table_name_year + " no creada. Creando")
-
 	exec_mysql_query(db_name, query)
 
-	log_msg_ok4()
 
-	# actualizo el fichero de configuracion avisando que se creo la tabla para ese anio
-	log_msg4("Cambiando año a %s para %s en config.cfg" % (txt_year, table_name))
-	Config().set_latest_table_year(table_name, txt_year, test_mode)
+def create_tables():
+	"""
+	Crea nuevas tablas VISITEDYYYY, SAVEDYYYY, ACTIONSYYYY
+	"""
+	log_msg4("No hay tablas para el año " + txt_year + ". Creando")
+
+	create_table('visited')
+	create_table('saved')
+	create_table('actions')
+
+	global new_tables_created
+	new_tables_created = True
+
 	log_msg_ok4()
 
 
@@ -128,11 +134,12 @@ def txt_to_table(table_name):
 	"""
 	Populo la tabla con los datos del _result.txt
 	"""
+	table_name_year = get_table_name_year(table_name)
+
 	# si el fichero no tiene nada no hay nada que pasar a la BD
 	if is_empty(TXT_FILE):
+		log_msg4("No se populó la tabla. dump.txt vacío!!")
 		return
-
-	table_name_year = get_table_name_year(table_name)
 
 	# http://stackoverflow.com/questions/3971541/what-file-and-directory-permissions-are-required-for-mysql-load-data-infile
 	# http://www.markhneedham.com/blog/2011/01/18/mysql-the-used-command-is-not-allowed-with-this-mysql-version/
@@ -154,9 +161,9 @@ def populate(table_name):
 
 	wsq_to_txt(table_name)
 
-	# si es un nuevo anio creo la nueva tabla visitedxxxx para el anio
-	if(not_created_table(table_name)):
-		create_table(table_name)
+	# si es un nuevo año se crea una nueva tabla
+	if(is_new_year(table_name) and not new_tables_created):
+		create_tables()
 
 	txt_to_table(table_name)
 
@@ -177,6 +184,9 @@ def run(date, test):
 	# si estamos ejecutando en modo test se populará la B.D. test_analysis
 	global db_name
 	db_name = "test_analysis" if test_mode else "analysis"
+
+	global new_tables_created
+	new_tables_created = False
 
 	log_msg2("Populando " + db_name)
 

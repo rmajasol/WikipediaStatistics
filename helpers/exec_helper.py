@@ -13,7 +13,7 @@ def exec_proc(cmd):
 	a su finalización para poder continuar.
 
 	Si hubiera error escribimos el mensaje en el historial de ejecución
-	y detenemos la ejecución del script
+	y detenemos por completo el script
 	http://stackoverflow.com/questions/1996518/retrieving-the-output-of-subprocess-call
 	http://docs.python.org/2/library/subprocess.html#popen-objects
 	"""
