@@ -1,11 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-import os
 from shutil import copy
 from helpers.config_helper import *
 from helpers.logging_helper import *
-from helpers.exec_helper import *
+from helpers.exec_helper import exec_proc, halt
 
 
 # ejecutamos wikisquilter sobre el log de la fecha dada
@@ -32,8 +31,13 @@ def run(date, test):
 
 	# copiamos el log a procesar a la carpeta wikisquilter/squidlogfiles
 	log_msg3("Copiando " + LOG_FILENAME + " a /squidlogfiles")
+
 	SQUIDLOGFILES_DIR = Config().get_dir_squidlogfiles()
-	copy(LOGS_DIR + LOG_FILENAME, SQUIDLOGFILES_DIR)
+	try:
+		copy(LOGS_DIR + LOG_FILENAME, SQUIDLOGFILES_DIR)
+	except IOError as err:
+		halt(err)
+
 	log_msg_ok3()
 
 	# ejecutamos wikisquilter
@@ -53,7 +57,10 @@ def run(date, test):
 
 	# eliminamos el log procesado de la carpeta wikisquilter/squidlogfiles
 	log_msg3("Eliminando " + LOG_FILENAME + " de /squidlogfiles")
-	os.remove(SQUIDLOGFILES_DIR + "/" + LOG_FILENAME)
+	try:
+		os.remove(SQUIDLOGFILES_DIR + LOG_FILENAME)
+	except OSError as err:
+		halt(err)
 	log_msg_ok3()
 
 	# vuelvo al directorio padre para que no haya problema a la hora de

@@ -50,8 +50,7 @@ class Chart
 	Devuelve la tabla a ser pintada
 
 	@params
-		$dates[
-			'i_date'] (fecha inicial)
+		$dates'i_date'] (fecha inicial)
 			'f_date'] (fecha final)
 
 		$graphs =
@@ -93,16 +92,7 @@ class Chart
 
 		// select month(day), count(*), sum(count) from visited2009 where lang='EN' and ns=0 and month(day) = 5 group by month(day);
 
-		// $actions = array(
-		// 	"visited" => null,
-		// 	"edit" => )
-
-		// $namespaces = array(
-		// 	"article" => 0,
-		// 	"article_talk" => 2,
-		// 	"user" => 3,
-		// 	"user_talk" => 4
-		// );
+		
 
 		// tabla inicialmente con los días
 		$table = array(

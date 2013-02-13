@@ -35,6 +35,8 @@ def init_logger(module, test):
 		filemode='w'
 	)
 
+	print "Creado historial de ejecución en " + filename
+
 
 # mensajes de iniciación de algún procedimiento. Distintos niveles de indentación
 def log_msg(msg):
@@ -72,4 +74,4 @@ def log_msg_ok4():
 
 # mensaje de error
 def log_error_msg(error_msg):
-	logging.error(error_msg)
+	logging.error("ERROR: " + str(error_msg))

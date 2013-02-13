@@ -6,6 +6,18 @@ import sys
 from logging_helper import log_error_msg
 
 
+def halt(error_msg):
+	"""
+	Detenemos la ejecución del script por completo, mostrando un
+	mensaje de error tanto en consola como en el historial de ejecución
+	"""
+	print "ERROR: " + str(error_msg)
+	log_error_msg(error_msg)
+	# http://stackoverflow.com/questions/1187970/how-to-exit-from-python-without-traceback
+	# http://docs.python.org/2/library/exceptions.html#exceptions.SystemExit
+	sys.exit(0)
+
+
 def exec_proc(cmd):
 	"""
 	Ejecuta un proceso invocado por el comando 'cmd' del mismo modo
@@ -26,9 +38,6 @@ def exec_proc(cmd):
 
 	# si hay error mostramos su mensaje y salimos del script
 	if error:
-		log_error_msg(error)
-		# http://stackoverflow.com/questions/1187970/how-to-exit-from-python-without-traceback
-		# http://docs.python.org/2/library/exceptions.html#exceptions.SystemExit
-		sys.exit(0)
+		halt(error)
 
 	# return datetime.datetime.now() - start

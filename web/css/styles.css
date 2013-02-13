@@ -1,22 +1,27 @@
 body
 {
-    width: 900px;
+    width: auto;
+    margin: 30px auto;
     text-align: center;
+    background: green
+}
+
+#chart_dates, #graph_selectors
+{
+	/*display: inline-block;*/
+	border: 1px solid black
+}
+
+#graph_selectors
+{
+	vertical-align: top
 }
 
 #chart_div
 {
-    width: auto;
+    width: 1000px;
+    margin: auto;
     height: 500px;
-}
-
-#i_year{
-    position: relative;
-    left: 0px
-}
-
-#f_year{
-    position: relative;
-    right: 0px
+    padding: -40px;
 }
 
