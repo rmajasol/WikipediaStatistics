@@ -113,10 +113,11 @@ function get_min_max_dates()
 }
 
 
-// corta una cadena YYYYMMDD en año, mes, día
 function slice_date($date)
 {
-	$year = (int)(substr($date, 0, 4));
+	// corta una cadena YYYYMMDD en año, mes, día
+
+	$year = substr($date, 0, 4);
 	$month = substr($date, 4, 2);
 	$day = substr($date, 6, 2);
 
@@ -135,25 +136,291 @@ function format_date($date)
 }
 
 
-// http://boonedocks.net/mike/archives/137-Creating-a-Date-Range-Array-with-PHP.html
-function createDateRangeArray($strDateFrom,$strDateTo) {
-	// takes two dates formatted as YYYY-MM-DD and creates an
-	// inclusive array of the dates between the from and to dates.
-	$aryRange=array();
+function date_fmt($str_date)
+{
+	// devuelve si una fecha cumple el formato fmt dado
 
-	$iDateFrom=mktime(1,0,0, substr($strDateFrom,5,2), substr($strDateFrom,8,2),substr($strDateFrom,0,4));
-	$iDateTo=mktime(1,0,0, substr($strDateTo,5,2), substr($strDateTo,8,2), substr($strDateTo,0,4));
+	switch (strlen($str_date)) {
+		case 4:
+		return 'YYYY';
+		
+		case 6:
+		return 'YYYYMM';
 
-	if($iDateTo>=$iDateFrom){
-		array_push($aryRange,date('Y-m-d',$iDateFrom)); // first entry
+		case 8:
+		return 'YYYYMMDD';
+	}
+}
 
-		while($iDateFrom<$iDateTo){
-			$iDateFrom+=86400; // add 24 hours
-			array_push($aryRange,date('Y-m-d',$iDateFrom));
+
+function dates_fmt($i_date, $f_date)
+{
+	// indica el formato de la petición, es decir, si queremos el resultado por
+	// días, por meses o por años
+	//
+	// la prioridad es YYYYMMDD > YYYYMM > YYYY
+	//
+	// por ejemplo si i_date es YYYY y f_date YYYYMM, entonces devolverá
+	// YYYYMM
+
+	$i_date_fmt = date_fmt($i_date);
+	$f_date_fmt = date_fmt($f_date);
+
+	return strlen($i_date_fmt) > strlen($f_date_fmt) ? $i_date_fmt : $f_date_fmt;
+}
+
+
+function complete_dates($dates)
+{
+	// Si por ejemplo recibimos $dates['i_date'] como '2013' lo convertiremos en '20130101'
+	// 
+	// Como resultado obtenemos el mismo diccionario pero con las dos fechas 
+	// completadas en YYYYMMDD
+
+	$i_date = $dates['i_date'];
+	$f_date = $dates['f_date'];
+	$i_date_fmt = $dates['i_date_fmt'];
+	$f_date_fmt = $dates['f_date_fmt'];
+	$dates_fmt = $dates['dates_fmt'];
+
+	switch ($dates_fmt) {
+		case 'YYYY':
+		// en este caso a las dos fechas hay que concatenarles '0101'
+		$i_date .= "0101"; // YYYY0101
+		$f_date .= "0101";
+		break;
+
+		case 'YYYYMM':
+		if($i_date_fmt == 'YYYY')
+		{
+			$i_date .= "0101"; // YYYY0101
+			$f_date .= "01"; 	// YYYYMM01
+		}
+		else if($f_date_fmt == 'YYYY')
+		{
+			$f_date .= "0101";
+			$i_date .= "01";
+		}
+		else
+		{
+			$i_date .= "01";
+			$f_date .= "01";
+		}
+		break;
+
+		case 'YYYYMMDD':
+		// aquí tenemos que comprobarlo contra YYYY e YYYYMM
+		if($i_date_fmt == 'YYYY')
+			$i_date .= "0101";
+		else if($f_date_fmt == 'YYYY')
+			$f_date .= "0101";
+
+		if($i_date_fmt == 'YYYYMM')
+			$i_date .= "01";
+		else if($f_date_fmt == 'YYYYMM'){
+			$f_date .= "01";
+		}
+		break;
+	}
+
+	return array(
+		'i_date' 		=> $i_date,
+		'i_date_fmt' 	=> $i_date_fmt,
+		'f_date' 		=> $f_date,
+		'f_date_fmt' 	=> $f_date_fmt,
+		'dates_fmt'		=> $dates['dates_fmt']
+		);
+}
+
+
+function get_f_date_sliced($dates)
+{
+	// Toma el diccionario $dates:
+	//
+	// $dates = array(
+	// 'i_date' 		=> $i_date,
+	// 'i_date_fmt' 	=> date_fmt($i_date),
+	// 'f_date' 		=> $f_date,
+	// 'f_date_fmt' 	=> date_fmt($f_date),
+	// 'dates_fmt'		=> dates_fmt($i_date, $f_date)
+	// );
+	//
+	// Devuelve la fecha final seteada en el formato:
+	//
+	// array(
+	// 	'year' => $year,
+	// 	'month' => $month,
+	// 	'day' => $day
+	// 	);
+
+	$mktime = get_f_date_mktime($dates);
+	$f_date_str = mktime_to_str($mktime);
+
+
+	return slice_date($f_date_str); 
+}
+
+
+// se invoca dentro de set_f_date_dicc
+function get_f_date_mktime($dates)
+{
+	// Nos servirá para setear la fecha final en función del formato.
+	//
+	// Devuelve un objeto tipo mktime
+	//
+	// Por ejemplo si las fechas son 2012 y 201302 entonces devolverá
+	// 201302[ultimo_de_mes]
+	//
+	// S 
+	//
+	// $dates: diccionario con 
+	//		$f_date['year'] 	'YYYY'
+	//		$f_date['month']	'MM'
+	//		$f_date['day']		'DD'
+	// 
+	// $dates_fmt: formato con el que pintaremos la gráfica
+	//		'YYYY' seteamos $iDateTo a el año siguiente menos un día
+	//		'YYYYMM' el mes siguiente menos un día
+	//
+	//		En el caso de 'YYYYMMDD' no es necesario hacer nada,
+	//		devolviendo la fecha tal cual
+
+	// see($dates);
+
+	$f_date = slice_date($dates['f_date']);
+	$month = (int)$f_date['month'];
+	$day = (int)$f_date['day'];
+	$year = (int)$f_date['year'];
+
+	$f_date_fmt = $dates['f_date_fmt'];
+	$dates_fmt = $dates['dates_fmt'];
+
+	switch ($dates_fmt) {
+		// 2012
+		case 'YYYY':
+		$day -= 1;
+		$year += 1;
+		break;
+
+		case 'YYYYMM':
+		if($f_date_fmt == 'YYYY')
+		{
+			$day -= 1;
+		}
+		else
+		{
+			$month += 1;
+			$day -= 1;
 		}
 	}
 
-	return $aryRange;
+	return mktime(1,0,0, $month, $day, $year);
+}
+
+
+// se invoca dentro de set_f_date_dicc
+function mktime_to_str($mktime)
+{
+	// recibe un objeto mktime y devuelve un string en formato YYYYMMDD
+	
+	$d = date('Y-m-d',$mktime);
+
+	$year = substr($d, 0, 4);
+	$month = substr($d, 5, 2);
+	$day = substr($d, 8, 2);
+
+	return $year . $month . $day;
+}
+
+
+function set_f_date_dicc()
+{
+	// Devuelve un diccionario para la fecha a partir de setear la fecha final en
+	// función del formato usado
+	//
+	// $f_date: diccionario con 
+	//		$f_date['year'] 	'YYYY'
+	//		$f_date['month']	'MM'
+	//		$f_date['day']		'DD'
+
+	$mktime = set_f_date_mktime($f_date, $dates_fmt);
+
+	return mktime_to_str($mktime);
+}
+
+
+function date_to_time($date)
+{
+	// http://www.highlystructured.com/comparing_dates_php.html
+	//
+	// Transforma un diccionario (year, month, day) en un objeto time
+	$date = slice_date($date);
+	$d = $date['year'] . "-" . $date['month'] . "-" . $date['day'];
+
+	return strtotime($d);
+}
+
+
+function gen_dates_arr($dates) {
+	// modificado de:
+	// http://boonedocks.net/mike/archives/137-Creating-a-Date-Range-Array-with-PHP.html
+	// takes two dates formatted as YYYYMMDD and creates an
+	// inclusive array of the dates between the from and to dates.
+	//
+	// Esto nos servirá para pintar el eje de las fechas
+	//
+	// Por ejemplo si el formato es YYYYMM y las fechas inicial y final 2012, 201202,
+	// entonces pintará desde 201201 hasta 201202 inclusive
+
+	// see($d);
+	
+	// $iDateFrom = mktime(1,0,0, $i_date['month'], $i_date['day'], $i_date['year']);
+	// $iDateTo = mktime(1,0,0, $strDateTo['month'], $strDateTo['day'], $strDateTo['year']);
+	// cambiamos la fecha final dependiendo del formato a usar
+	$iDateFrom = date_to_time($dates['i_date']);
+	$iDateTo = get_f_date_mktime($dates);  
+
+	$date = date('Y-m-d', $iDateFrom);
+	$dates_arr = array();
+
+	switch ($dates['dates_fmt']) {
+
+		case 'YYYY':
+		for($i=0; $iDateFrom < $iDateTo; $i++){
+			$add_not_zero = $i == 1 ? "+1 year" : "+" . $i . " years";
+			$add = $i == 0 ? "" : $add_not_zero;
+			// http://stackoverflow.com/questions/3642652/get-current-date-and-date-after-two-months-in-php
+			$iDateFrom = strtotime($date . $add);
+			array_push($dates_arr,date('Y',$iDateFrom));
+		}		
+		break;
+
+		case 'YYYYMM':
+		for($i=0; $iDateFrom < $iDateTo; $i++){
+			$add_not_zero = $i == 1 ? "+1 month" : "+" . $i . " months";
+			$add = $i == 0 ? "" : $add_not_zero;
+			$iDateFrom = strtotime($date . $add);
+			array_push($dates_arr,date('Y-m',$iDateFrom));
+		}
+		break;
+
+		case 'YYYYMMDD':
+		for($i=0; $iDateFrom < $iDateTo; $i++){
+			$add_not_zero = $i == 1 ? "+1 day" : "+" . $i . " days";
+			$add = $i == 0 ? "" : $add_not_zero;
+			$iDateFrom = strtotime($date . $add);
+			array_push($dates_arr,date('Y-m-d',$iDateFrom));
+			// see($dates_arr);
+		}
+		break;
+	}
+
+	// see($dates_arr);
+
+	// quitamos el elemento de más que siempre aparece..
+	array_pop($dates_arr);
+
+	return $dates_arr;
 }
 
 

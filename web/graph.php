@@ -2,6 +2,7 @@
 
 require 'functions.php';
 
+
 // echo json_encode('hola!!');
 // echo var_dump(json_decode($_POST['chart']));
 
@@ -14,30 +15,43 @@ require 'functions.php';
 
 // decodificamos lo que recibimos en la petición AJAX
 $chart = json_decode($_POST['chart']);
+$i_date = $chart->{'i_date'};
+$f_date = $chart->{'f_date'};
 
 
 //
 // FECHAS INICIAL Y FINAL
 //
-// $i_date = format_date($chart->{'i_date'});
-// $f_date = format_date($chart->{'f_date'});
-// $i_date = '20130101';
-// $f_date = '20130110';
-$i_date = $chart->{'i_date'};
-$f_date = $chart->{'f_date'};
+// $i_date = '201201';
+// $f_date = '20120105';
 
-$dates = createDateRangeArray(format_date($i_date), format_date($f_date));
 
+$dates = array(
+	'i_date' 		=> $i_date,
+	'i_date_fmt' 	=> date_fmt($i_date),
+	'f_date' 		=> $f_date,
+	'f_date_fmt' 	=> date_fmt($f_date),
+	'dates_fmt'		=> dates_fmt($i_date, $f_date)
+	);
+
+
+$dates = complete_dates($dates);
+// see($dates);
+
+$dates_arr = gen_dates_arr($dates);
+
+
+
+// see($dates_arr);
 
 // array(426) { [0]=> string(10) "2012-01-01" [1]=> string(10) "20
 
 //
 // GRÁFICAS
 //
-$received_graphs = $chart->{'graphs'};
 // echo $graphs[0]->{'edition'};
-
 // populamos un array 'graphs' a partir de los gráficos recibidos en JSON
+$received_graphs = $chart->{'graphs'};
 $graphs = array();
 foreach ($received_graphs as $graph) {
 	$graphs[] = array(
@@ -53,28 +67,29 @@ foreach ($received_graphs as $graph) {
 // 		),
 // 	array(
 // 		"edition" => 'ALL',
-// 		"action" => '2'
+// 		"action" => '4'
 // 		),
 // 	);
 
-// see(get_json($dates, $graphs));
+// see(get_json());
 // echo get_json($dates, $graphs);
-echo get_json($dates, $graphs);
+echo get_json();
 
 
 
 
 
-function get_json($dates, $graphs)
+function get_json()
 {
 	// inicializamos el resultado a devolver en la respuesta AJAX,
 	// añadiendo en la primera fila el array de fechas..
 	$raw_result = array(
-		"dates" => $dates,
+		"dates" => $GLOBALS['dates_arr'],
 		"graphs" => array()
 		);
 
-	foreach ($graphs as $graph) {
+	// see($raw_result);
+	foreach ($GLOBALS['graphs'] as $graph) {
 
 		// añadimos la fila generada al resultado
 		$graph_key = $graph['edition'] . "_" . get_action_name($graph['action']);
@@ -206,6 +221,9 @@ function get_action_name($action)
 	switch ($action) {
 		case 'null':
 		return 'visited';
+
+		case '0':
+		return 'edit';
 		
 		case '1':
 		return 'history';
@@ -219,22 +237,71 @@ function get_action_name($action)
 }
 
 
+function get_query_group_by()
+{
+	// devuelve el elemento de la query dependiendo del formato sobre el que pintamos la gráfica
+
+	$dates_fmt = $GLOBALS['dates']['dates_fmt'];
+	switch ($dates_fmt) {
+		case 'YYYY':
+		return "year(day)";
+
+		case 'YYYYMM':
+		return "month(day)";
+
+		default:
+		return "day";
+	}
+}
+
+
+function get_query_select_element()
+{
+	// http://dev.mysql.com/doc/refman/5.0/es/date-calculations.html
+	switch ($GLOBALS['dates']['dates_fmt']) {
+		case 'YYYY':
+		return "year(day)";
+
+		case 'YYYYMM':
+		return "left(day,7)";
+
+		default:
+		return "day";
+	}
+}
+
+
 function gen_row($graph)
 {
 	// genera un array con el resultado de hacer la petición a la BD
+	//
+	//	Por ejemplo si el formato es YYYYMMDD devolverá:
 	//
 	// 	[
 	//		["2012-01-28","7361"],["2012-01-29","7349"],["2012-01-30","7366"],
 	//		["2012-01-31","7182"],["2012-02-01","7211"],["2012-02-02","7163"],
 	//		["2012-02-03","7114"]
 	//	]
+	//
+	//	Para YYYYMM:
 
-	$i_date = slice_date($GLOBALS['i_date']);
-	$f_date = slice_date($GLOBALS['f_date']);
+	// $i_date = slice_date($GLOBALS['i_date']);
+	// $f_date = slice_date($GLOBALS['f_date']);
+
+	$dates = $GLOBALS['dates'];
+	// see($dates);
+
+	$i_date = slice_date($dates['i_date']);
+	// $f_date = slice_date($GLOBALS['date']['f_date']);
+	// cambiamos la fecha final según el formato
+	$f_date = get_f_date_sliced($dates);
+
+	// see($i_date);
+	// see($f_date);
 
 	// año inicial y final
-	$i_year = $i_date['year'];
-	$f_year = $f_date['year'];
+	$i_year = (int) $i_date['year'];
+	$f_year = (int) $f_date['year'];
 
 	// contendrá todas las fechas y counts devueltas por la consulta.
 	// Se irá llenando en cada iteración. Si por ejemplo queremos
@@ -248,7 +315,9 @@ function gen_row($graph)
 		if(table_exists($table_name))
 		{
 
-			$query = "select day, sum(count) from " . $table_name . " where ns=0";
+			$element = get_query_select_element();
+
+			$query = "select " . $element . ", sum(count) from " . $table_name . " where ns=0";
 
 			if($graph['edition'] != 'ALL')
 				$query .= " and lang='" . $graph['edition'] . "'";
@@ -286,11 +355,14 @@ function gen_row($graph)
 				}
 			}
 
-			$query .= " group by day order by day asc";
+			$group_by = get_query_group_by();
+
+			$query .= " group by " . $group_by . " order by day asc";
+			// see($query);
 
 			$regs = do_query($query);
 			while($row = mysql_fetch_array($regs))
-				$arr[] = array($row['day'], $row['sum(count)']);
+				$arr[] = array($row[$element], $row['sum(count)']);
 		}
 	}
 

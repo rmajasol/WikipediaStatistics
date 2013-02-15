@@ -6,8 +6,14 @@ var max_date;
 // esta variable contendrá cada gráfica devuelta vía AJAX
 var graphs = [];
 // fechas inicial y final
+
 var i_date;
+var i_year;
+var i_month;
+
 var f_date;
+var f_year;
+var f_month;
 
 
 $(document).on('ready', function(){
@@ -30,9 +36,11 @@ function setErrorBox(msg)
 }
 
 
-// divide cadena YYYYMMDD en diccionario con año, mes, día
-function sliceDate(field)
+
+function sliceDate_toInt(field)
 {
+	// divide cadena YYYYMMDD en diccionario con año, mes, día enteros
+	
 	var year = parseInt(field.substring(0, 4), 10);
 	var month = parseInt(field.substring(4, 6), 10);
 	var day = parseInt(field.substring(6, 9), 10);
@@ -45,16 +53,64 @@ function sliceDate(field)
 }
 
 
-// mira si un campo tiene bien puesta la fecha en formato YYYYMMDD
+function sliceDate_toStr(field)
+{
+	// divide cadena YYYYMMDD en diccionario de strings con año YYYY, mes MM, día DD
+
+	var year = field.substring(0, 4);
+	var month = field.substring(4, 6);
+	var day = field.substring(6, 9);
+
+	return {
+		year: year,
+		month: month,
+		day: day
+	};
+}
+
+
+function date_fmt(field)
+{
+	// indica el formato de la fecha: YYYY, YYYYMM, YYYYMMDD o formato no válido
+
+	// http://www.9lessons.info/2009/03/perfect-javascript-form-validation.html
+	var regexp_yyyy = /^[0-9]{4}$/;
+	var regexp_yyyymm = /^[0-9]{6}$/;
+	var regexp_yyyymmdd = /^[0-9]{8}$/;
+
+	field = field.toString();
+
+	if(regexp_yyyy.test(field))
+		return 'YYYY';
+	if(regexp_yyyymm.test(field))
+		return 'YYYYMM';
+	if(regexp_yyyymmdd.test(field))
+		return 'YYYYMMDD';
+
+	if(field === 'init')
+	{
+		i_date = min_date;
+		return 'YYYYMMDD';
+	}
+
+	if(field === 'end')
+	{
+		f_date = max_date;
+		return 'YYYYMMDD';
+	}
+
+	return 'invalid';
+}
+
+
 function formatOk(field)
 {
-	// comprobamos si está bien escrito
-	// http://www.9lessons.info/2009/03/perfect-javascript-form-validation.html
-	var ok_regexp = /^[0-9]{8}$/;
-	field = field.toString();
-	if(!ok_regexp.test(field))
+	// comprobamos si está bien escrito el campo
+
+	if(date_fmt(field) === 'invalid')
 	{
-		setErrorBox("Introduzca fechas en formato YYYYMMDD");
+		setErrorBox("Introduzca fechas en formatos: YYYY, YYYYMM o YYYYMMDD, " +
+			"o bien introduzca 'init' y/o 'end'");
 		return false;
 	}
 
@@ -62,31 +118,107 @@ function formatOk(field)
 }
 
 
+function dates_fmt(i_date, f_date)
+{
+	// indica el formato de la petición, es decir, si queremos el resultado por
+	// días, por meses o por años
+	//
+	// la prioridad es YYYYMMDD > YYYYMM > YYYY
+	//
+	// por ejemplo si i_date es YYYY y f_date YYYYMM, entonces devolverá
+	// YYYYMM
+
+	i_date_fmt = date_fmt(i_date);
+	f_date_fmt = date_fmt(f_date);
+
+	if(i_date_fmt.length > f_date_fmt.length)
+		return i_date_fmt;
+	else
+		return f_date_fmt;
+}
+
+
 // mira si ambos campos tienen bien puesta la fecha en formato YYYYMMDD
-function fieldsOk(i_date, f_date)
+function fieldsOk()
 {
 	var formatsOk = formatOk(i_date) && formatOk(f_date);
-	// var ok = fieldOk(i_date) && fieldOk(f_date);
 
-	if(formatsOk){
-		if(i_date < min_date)
-		{
-			setErrorBox("La fecha mínima es " + min_date);
-			return false;
-		}
-		if(f_date > max_date)
-		{
-			setErrorBox("La fecha máxima es " + max_date);
-			return false;
-		}
+	if(!formatsOk)
+		return false;
 
-		$("#error_box").hide();
-		return true;
-	}
-	else
+	// min-max
+	min_date_sliced = sliceDate_toStr(min_date);
+	min_year = min_date_sliced['year'];
+	min_month = min_date_sliced['month'];
+	min_day = min_date_sliced['day'];
+
+	max_date_sliced = sliceDate_toStr(max_date);
+	max_year = max_date_sliced['year'];
+	max_month = max_date_sliced['month'];
+	max_day = max_date_sliced['day'];
+
+	// initial-final
+	i_date_sliced = sliceDate_toStr(i_date);
+	i_year = i_date_sliced['year'];
+	i_month = i_date_sliced['month'] === '' ? "01" : i_date_sliced['month'];
+	i_day = i_date_sliced['day'] === '' ? "01" : i_date_sliced['day'];
+	
+	f_date_sliced = sliceDate_toStr(f_date);
+	f_year = f_date_sliced['year'];
+	f_month = f_date_sliced['month'] === '' ? "01" : f_date_sliced['month'];
+	f_day = f_date_sliced['day'] === '' ? "01" : f_date_sliced['day'];
+
+	if(i_year + i_month + i_day  >=  f_year + f_month + f_day)
 	{
+		setErrorBox("La fecha inicial debe ser menor a la final");
 		return false;
 	}
+
+	fmt = dates_fmt(i_date, f_date);
+
+	switch(fmt)
+	{
+		case 'YYYY':
+		if(i_year < min_year)
+		{
+			setErrorBox("El año mínimo es " + min_year);
+			return false;
+		}
+		if(f_year > max_year)
+		{
+			setErrorBox("El año máximo es " + max_year);
+			return false;
+		}
+		break;
+
+		case 'YYYYMM':
+		if(i_year + i_month < min_year + min_month)
+		{
+			setErrorBox("El mes mínimo es " + min_year + min_month);
+			return false;
+		}
+		if(f_year + f_month > max_year + max_month)
+		{
+			setErrorBox("El mes máximo es " + max_year + max_month);
+			return false;
+		}
+		break;
+
+		case 'YYYYMMDD':
+		if(i_year + i_month + i_day < min_year + min_month + min_day)
+		{
+			setErrorBox("El día mínimo es " + min_date);
+			return false;
+		}
+		if(f_year + f_month + f_day > max_year + max_month + max_day)
+		{
+			setErrorBox("El día máximo es " + max_date);
+			return false;
+		}
+	}
+
+	$("#error_box").hide();
+	return true;
 }
 
 
@@ -96,7 +228,7 @@ function removeGraph(event)
 	event.preventDefault();
 	var li = $(this).parent();
 	li.remove();
-	
+
 	refreshChart();
 }
 

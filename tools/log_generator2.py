@@ -70,8 +70,8 @@ def crear_log(date):
 if __name__ == "__main__":
 
 	d = date.today()
-	d = d.replace(year=2012, month=4, day=1)
-	d2 = d.replace(year=2012, month=8, day=1)
+	d = d.replace(year=2012, month=8, day=1)
+	d2 = d.replace(year=2013, month=1, day=1)
 
 	# mientras que la fecha d sea menor a la final (d2)..
 	while d < d2:
