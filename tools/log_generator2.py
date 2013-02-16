@@ -42,6 +42,12 @@ def crear_log(date):
 	for i in range(0, LINES_TO_WRITE):
 		line = lines.readline()
 
+		# si se llega al final del log descomprimido se vuelve otra vez al principio..
+		if not line:
+			block_number = 0
+			crear_log(date)
+			return
+
 		# cambiamos la fecha de cada linea leída en log_lines por la actual
 		line = line.replace("Jun 14 ", date.strftime('%b %d '))
 		line = line.replace(" 2012-06-14", date.strftime(' %Y-%m-%d'))
@@ -70,8 +76,8 @@ def crear_log(date):
 if __name__ == "__main__":
 
 	d = date.today()
-	d = d.replace(year=2012, month=8, day=1)
-	d2 = d.replace(year=2013, month=1, day=1)
+	d = d.replace(year=2008, month=1, day=1)
+	d2 = d.replace(year=2012, month=1, day=1)
 
 	# mientras que la fecha d sea menor a la final (d2)..
 	while d < d2:

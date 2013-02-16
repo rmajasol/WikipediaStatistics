@@ -12,9 +12,17 @@ body
 	border: 1px solid black
 }
 
+#date_selectors input
+{
+    width: 150px
+}
+
 #graph_selectors
 {
 	vertical-align: top
+}
+#graph_selectors ul li{
+    list-style: none
 }
 
 #chart_div

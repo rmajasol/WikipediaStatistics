@@ -1,21 +1,41 @@
+// cargamos el paquete para poder pintar las gráficas
 google.load("visualization", "1", {packages:["corechart"]});
 
+// fechas mínima y máxima a poder introducir
 var min_date;
 var max_date;
 
-// esta variable contendrá cada gráfica devuelta vía AJAX
-var graphs = [];
 // fechas inicial y final
-
 var i_date;
 var i_year;
 var i_month;
-
 var f_date;
 var f_year;
 var f_month;
 
+// conjunto de gráficas como respuesta de la petición AJAX
+var graphs = [];
 
+// conjuntos de ediciones, acciones y namespaces
+var editions = ['EN', 'ES', 'FR', 'IT', 'JA', 'NL', 'PL', 'PL', 'PT', 'RU'];
+var actions = {
+	'Visited': 'null',
+	'History': '1',
+	'Save': '2',
+	'Search': '4'
+};
+var namespaces = {
+	'Article': '0',
+	'Article:talk': '2',
+	'User': '3',
+	'User:talk': '4'
+};
+
+
+
+//
+// DOCUMENT READY
+//
 $(document).on('ready', function(){
 
 	min_date = $("#date_selectors input[name=i_date]").val();
@@ -24,8 +44,13 @@ $(document).on('ready', function(){
 	var date_selectors = $("#date_selectors input[type=text]");
 	date_selectors.on('keyup', refreshChart);
 
-	var add_graph_link = $("#graph_selectors a");
-	add_graph_link.on('click', displayGraphSelector);
+	// var add_graph_link = $("#graph_selectors a");
+	// add_graph_link.on('click', function(e){
+	// 	e.preventDefault();
+	// 	addGraphSelector();
+	// });
+
+addGraphSelector();
 });
 
 
@@ -170,7 +195,7 @@ function fieldsOk()
 
 	if(i_year + i_month + i_day  >=  f_year + f_month + f_day)
 	{
-		setErrorBox("La fecha inicial debe ser menor a la final");
+		setErrorBox("La fecha final debe ser mayor a la inicial");
 		return false;
 	}
 
@@ -223,65 +248,96 @@ function fieldsOk()
 
 
 // elimina una gráfica
-function removeGraph(event)
+function removeGraph(event, li)
 {
 	event.preventDefault();
-	var li = $(this).parent();
 	li.remove();
 
 	refreshChart();
 }
 
 
-// muestra selectores para dibujar una gráfica
-function displayGraphSelector(event)
+function addEvents(li)
 {
-	event.preventDefault();
+	edition = li.find("select[name=edition]");
+	action = li.find("select[name=action]");
+
+	edition.on('change', refreshChart);
+	action.on('change', refreshChart);
+
+	// añadimos un shortcut para cuando, teniendo el foco en el selector para action,
+	// con sólo pulsar TAB de añadan unos selectores nuevos..
+	action.on('keydown', function(e){
+		var keyCode = e.keyCode || e.which;
+
+		// keyCode es 9 para la tecla TAB
+		if (keyCode == 9) {
+			e.preventDefault();
+			refreshChart();
+			addGraphSelector();
+			// movemos el foco a la selección de la siguiente gráfica..
+			li.next().find("select[name=edition]").focus();
+		}
+	});
+	
+	var remove_link = li.find("a");
+	remove_link.on('click', function(e){
+		removeGraph(e, li);
+	});
+
+	// si pulsamos la tecla de retroceso estando en algún selector entonces
+	// elimina la gráfica anterior
+	selector = li.find("select");
+	selector.on('keyup', function(e){
+		var keyCode = e.keyCode || e.which;
+
+		if (keyCode == 8) {
+			e.preventDefault();
+			removeGraph(e, li.prev());
+		}
+	});
+}
+
+
+function addGraphSelector()
+{
+	// añade los selectores necesarios para dibujar una gráfica
 
 	var edition =
 	"<select name='edition'>" +
 	"<option value=''>Edición..</option>" +
-	"<option value='ALL'>Todas</option>" +
-	"<option value='ES'>ES</option>" +
-	"<option value='EN'>EN</option>" +
-	"<option value='RU'>RU</option>" +
-	"</select>";
-
+	"<option value='ALL'>All</option>" +
+	"<option value='TOTAL'>Total</option>";
+	for(var i in editions)
+		edition += "<option value='" + editions[i] + "'>" + editions[i] + "</option>";
+	edition += "</select>";
+	
 	var action =
 	"<select name='action'>" +
 	"<option value=''>Acción..</option>" +
-	"<option value='null'>Visited</option>" +
-	"<option value='0'>Edit</option>" +
-	"<option value='1'>History</option>" +
-	"<option value='2'>Save</option>" +
-	"<option value='4'>Search</option>" +
-	"</select>";
+	"<option value='ALL'>All</option>";
+	// "<option value='TOTAL'>Total</option>";
+	// http://stackoverflow.com/questions/921789/how-to-loop-through-javascript-object-literal-with-objects-as-members
+	for (var key in actions)
+		action += "<option value='" + actions[key] + "'>" + key + "</option>";
+	action += "</select>";
 
 	var remove = "<a href='#'>[x]</a>";
 
 	var li = "<li>" + edition + action + remove + "</li>";
-
-	var ul = $(this).parent().find("ul");
+	var ul = $('#graph_selectors ul');
 	ul.append(li);
 
 	// añadimos los eventos al último <li> creado
 	li = ul.find("li:last");
-
-	edition = li.find("select[name=edition]");
-	edition.on('change', refreshChart);
-	action = li.find("select[name=action]");
-	action.on('change', refreshChart);
-
-	var remove_link = li.find("a");
-	remove_link.on('click', removeGraph);
+	addEvents(li);
 }
-
 
 
 function drawChart(result)
 {
 	// dibuja todas las gráficas a partir del objeto JSON devuelto, el cual tiene
-	// la forma:
+	// la forma, por ejemplo para una gráfica pintada en YYYYMMDD (por días):
 	//
 	// "{
 	//	"dates":
@@ -290,12 +346,15 @@ function drawChart(result)
 	//
 	//	"graphs":
 	//	{
-	//		"ALL_visited":
+	//		"TOTAL_visited":
 	//			["7433","7474","7625","7315","7482","0","0","0","0","0"],
-	//		"ALL_saved":
+	//		"TOTAL_saved":
 	//			["0","5","4","1","5","0","0","0","0","0"]
 	//	}
 	// }"
+
+	if(result === null)
+		return;
 
 	var dates = result.dates;
 	var graphs = result.graphs;
@@ -303,31 +362,11 @@ function drawChart(result)
 	var data = new google.visualization.DataTable();
 
 	//
-	// Esta mierda funciona!
-	//
-	// data.addColumn('string', 'Country');
-	// data.addColumn('number', 'Sales');
-	// data.addColumn('number', 'Expenses');
-	// data.addRows(4);
-	// data.setCell(0, 0, 'US');
-	// data.setCell(1, 0, 'CA');
-	// data.setCell(2, 0, 'CN');
-	// data.setCell(3, 0, 'GB');
-	// data.setCell(0, 1, 10000);
-	// data.setCell(1, 1, 7000);
-	// data.setCell(2, 1, 8000);
-	// data.setCell(3, 1, 7000);
-	// data.setCell(0, 2, 8000);
-	// data.setCell(1, 2, 5000);
-	// data.setCell(2, 2, 12000);
-	// data.setCell(3, 2, 15000);
-
-
-	//
 	// añadimos columnas
 	//
 	data.addColumn('string', 'Day');
 
+	// añadimos tantas columnas como gráficas tengamos que pintar
 	// http://stackoverflow.com/questions/684672/loop-through-javascript-object
 	for(var graph in graphs)
 	{
@@ -339,7 +378,6 @@ function drawChart(result)
 			data.addColumn('number', graph_name);
 		}
 	}
-
 
 	//
 	// añadimos filas
@@ -357,7 +395,7 @@ function drawChart(result)
 	}
 
 	//luego cada gráfica
-	//Empieza en 1 porque ya he pintado la columna para los días.
+	//Empieza en 1 porque ya he pintado todos los días (todos las celdas de la columna 0).
 	//Falta la columna para cada gráfica
 	var column_num = 1;
 
@@ -365,7 +403,8 @@ function drawChart(result)
 	{
 		if (graphs.hasOwnProperty(graph))
 		{
-			value_num = 0;
+			value_num = 0; // representa el número de fila para la columna 'column_num'
+			
 			// recorremos los datos de la gráfica
 			var graph_data = graphs[graph];
 			for(i in graph_data)
@@ -387,40 +426,11 @@ function drawChart(result)
 
 	var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
 	chart.draw(data, options);
-
-	// data.addColumn('number', 'Salary');
-	// // data.addColumn('boolean', 'Full Time');
-	// data.addRows(3);
-	// data.setCell(0, 0, 'ALL_visited');
-	// data.setCell(0, 1, 10000);
-	// // data.setCell(0, 2, true);
-	// data.setCell(1, 0, 'Mary');
-	// data.setCell(1, 1, 25000);
-	// // data.setCell(1, 2, true);
-	// data.setCell(2, 0, 'Steve');
-	// data.setCell(2, 1, 8000);
-	// data.setCell(2, 2, false);
-	// data.setCell(3, 0, 'Ellen');
-	// data.setCell(3, 1, 20000);
-	// data.setCell(3, 2, true);
-	// data.setCell(4, 0, 'Mike');
-	// data.setCell(4, 1, 12000);
-	// data.setCell(4, 2, false);
-
-	// var data = google.visualization.arrayToDataTable([
-	//	['Year', 'Sales', 'Expenses'],
-	//	['2004',  2000, 400],
-	//	['2005',  1170,      460],
-	//	['2006',  660,       1120],
-	//	['2007',  1030,      540]
-	//	]);
 }
 
 
 function refreshChart()
 {
-	// dibuja todas las gráficas
-
 	// obtengo las fechas
 	i_date = $("#date_selectors input[name=i_date]").val();
 	f_date = $("#date_selectors input[name=f_date]").val();
@@ -432,47 +442,89 @@ function refreshChart()
 	// limpiamos los gráficos para volver a rellenarlo con cada selector
 	graphs = [];
 
+	//
 	// recorre cada selección de la lista
 	// http://stackoverflow.com/questions/2722582/jquery-get-each-divs-sub-child-divs-and-grab-info-into-an-array
-	$("#graph_selectors ul li").each(function() {
+	$("#graph_selectors li").each(function() {
 		var edition = $(this).find("select[name=edition]").val();
 		var action = $(this).find("select[name=action]").val();
+
+		var graph;
 
 		if (edition === '' || action === '')
 			return;
 
+		//
 		// añade la gráfica al array de gráficas
-		var graph = {
-			edition: edition,
-			action: action
-		};
-		graphs.push(graph);
+		//
+		// si un selector es 'ALL' entonces se pintará todo el conjunto
+		//
+		if (edition === 'ALL')
+		{
+			for(var i in editions)
+			{
+				graph = {
+					edition: editions[i],
+					action: action
+				};
+				graphs.push(graph);
+			}
+		}
+
+		if (action === 'ALL')
+		{
+			for (var key in actions) {
+				graph = {
+					edition: edition,
+					action: actions[key]
+				};
+				graphs.push(graph);
+			}
+		}
+
+		if (edition !== 'ALL' && action !== 'ALL')
+		{
+			graph = {
+				edition: edition,
+				action: action
+			};
+			graphs.push(graph);
+		}
 	});
 
-	// realizamos la petición AJAX si hay algo..
-	if(graphs.length !== 0)
+	// si no hay nada que dibujar pues nada..
+	if (graphs.length === 0)
 	{
-		// a enviar en la petición AJAX transformado en objeto JSON
-		var chart = {
-			i_date: i_date,
-			f_date: f_date,
-			graphs: graphs
-		};
-
-		$.ajax({
-			url: 'graph.php',
-			type:  'post',
-			// data:  { 'chart': chart },
-			data: {'chart': JSON.stringify(chart) },
-			dataType: 'json',  // esto indica que la respuesta vendrá en formato json
-			// cache: false,
-			// beforeSend: function () {
-			// $("#chart_div").html("Procesando, espere por favor...");
-			// },
-			success: function(result) {
-				drawChart(result);
-			}
-		});
+		drawChart(result=null);
+		$('#chart_div').html('');
+		return;
 	}
 
+
+	//
+	// Si hay alguna gráfica para pintar entonces realizamos la petición AJAX
+	// y añadimos nuevos selectores
+	//
+	
+	// a enviar en la petición AJAX transformado en objeto JSON
+	var chart = {
+		i_date: i_date,
+		f_date: f_date,
+		graphs: graphs
+	};
+
+	$.ajax({
+		url: 'graph.php',
+		type:  'post',
+		// data:  { 'chart': chart },
+		data: {'chart': JSON.stringify(chart) },
+		dataType: 'json',  // esto indica que la respuesta vendrá en formato json
+		// cache: false,
+		// beforeSend: function () {
+		// $("#chart_div").html("Procesando, espere por favor...");
+		// },
+		success: function(result) {
+			drawChart(result);
+		}
+	});
 }

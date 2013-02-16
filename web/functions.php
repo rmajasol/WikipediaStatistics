@@ -298,19 +298,25 @@ function get_f_date_mktime($dates)
 	switch ($dates_fmt) {
 		// 2012
 		case 'YYYY':
-		$day -= 1;
-		$year += 1;
+		$day--;
+		$year++;
 		break;
 
 		case 'YYYYMM':
 		if($f_date_fmt == 'YYYY')
 		{
-			$day -= 1;
+			$day --;
 		}
 		else
 		{
-			$month += 1;
-			$day -= 1;
+			$month++;
+			$day--;
+		}
+
+		case 'YYYYMMDD':
+		if($f_date_fmt == 'YYYYMM')
+		{
+			$day--;
 		}
 	}
 

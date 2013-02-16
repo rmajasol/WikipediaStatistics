@@ -119,10 +119,10 @@ function transform($raw_result)
 	// "2013-01-07","2013-01-08","2013-01-09","2013-01-10"],
 	//
 	// "graphs":{
-	//		"ALL_visited":[
+	//		"TOTAL_visited":[
 	//			["2013-01-01","7433"],["2013-01-02","7474"],["2013-01-03","7625"],
 	//			["2013-01-04","7315"],["2013-01-05","7482"]],
-	//		"ALL_saved":[
+	//		"ES_saved":[
 	//			["2013-01-02","5"],["2013-01-03","4"],["2013-01-04","1"],
 	//			["2013-01-05","5"]]
 	//		}
@@ -136,8 +136,8 @@ function transform($raw_result)
 	// "2013-01-07","2013-01-08","2013-01-09","2013-01-10"],
 	//
 	// "graphs":{
-	//		"ALL_visited":["7433","7474","7625","7315","7482"],
-	//		"ALL_saved":["0","5","4","1","5"]
+	//		"TOTAL_visited":["7433","7474","7625","7315","7482"],
+	//		"ES_saved":["0","5","4","1","5"]
 	//		}
 	// }" 
 
@@ -239,7 +239,8 @@ function get_action_name($action)
 
 function get_query_group_by()
 {
-	// devuelve el elemento de la query dependiendo del formato sobre el que pintamos la gráfica
+	// devuelve el elemento 'group by' de la query dependiendo del formato
+	// sobre el que pintamos la gráfica
 
 	$dates_fmt = $GLOBALS['dates']['dates_fmt'];
 	switch ($dates_fmt) {
@@ -257,6 +258,7 @@ function get_query_group_by()
 
 function get_query_select_element()
 {
+	// Devuelve la proyección para la query
 	// http://dev.mysql.com/doc/refman/5.0/es/date-calculations.html
 	switch ($GLOBALS['dates']['dates_fmt']) {
 		case 'YYYY':
@@ -319,10 +321,10 @@ function gen_row($graph)
 
 			$query = "select " . $element . ", sum(count) from " . $table_name . " where ns=0";
 
-			if($graph['edition'] != 'ALL')
+			if($graph['edition'] != 'TOTAL')
 				$query .= " and lang='" . $graph['edition'] . "'";
 
-			// si la tabla es actionsYYYY entonces elegimos la acción
+			// si la tabla a consultar es actionsYYYY entonces elegimos la acción
 			if(get_table_name($graph['action']) == 'actions')
 				$query .= " and action=" . $graph['action'];
 
@@ -342,7 +344,8 @@ function gen_row($graph)
 				// 2013 == 2012
 				if($year == $i_year)
 				{
-					$query .= " and day >= " . 
+					$query .= 
+					" and day >= " . 
 					"'" . $year . "-" . $i_date['month'] . "-" . $i_date['day'] . "'" .
 					" and day <= " .
 					"'" . $year . "-" . $f_date['month'] . "-" . $f_date['day'] . "'";

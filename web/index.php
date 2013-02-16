@@ -23,9 +23,8 @@ require 'includes/header.php';
 
 
 <div id="graph_selectors">
+	<ul></ul>
 	<a href="">Add graph</a>
-	<ul>
-	</ul>
 </div>
 
 
