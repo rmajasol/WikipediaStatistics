@@ -16,7 +16,7 @@ function do_query($query)
 	$conexion=mysql_connect(DB_HOST, DB_USER, DB_PASS)
 	or die("Problemas en la conexion");
 
-	mysql_select_db("test_analysis", $conexion) 
+	mysql_select_db(DB_NAME, $conexion) 
 	or die("Problemas en la selección de la base de datos");
 
 	$registros=mysql_query($query, $conexion) or
@@ -42,9 +42,11 @@ function table_exists($table_name)
 	return $exists;
 }
 
-//
+
+
 function format($num)
 {
+	// devuelve 0n si n < 10 y n si no (01, 02, 03.. 09, 10, 11..)
 	return (int)$num < 10 ? "0" . $num : $num;
 }
 
@@ -52,11 +54,10 @@ function format($num)
 //
 // FECHAS
 //
-
-
-// devuelve las fechas primera y última registradas en la BD
 function get_min_max_dates()
 {
+	// devuelve las fechas primera y última registradas en la BD
+
 	// año inicial
 	$i_year = 2000;
 	// año final (el actual)
@@ -115,7 +116,7 @@ function get_min_max_dates()
 
 function slice_date($date)
 {
-	// corta una cadena YYYYMMDD en año, mes, día
+	// corta una cadena YYYYMMDD y devuelve un diccionario con año, mes y día
 
 	$year = substr($date, 0, 4);
 	$month = substr($date, 4, 2);
@@ -129,9 +130,10 @@ function slice_date($date)
 }
 
 
-// pasa de YYYYMMDD a YYYY-MM-DD
 function format_date($date)
 {
+	// pasa de YYYYMMDD a YYYY-MM-DD
+
 	return substr($date, 0, 4) . '-' . substr($date, 4, 2) . '-' . substr($date, 6, 2);
 }
 
@@ -256,7 +258,6 @@ function get_f_date_sliced($dates)
 	$mktime = get_f_date_mktime($dates);
 	$f_date_str = mktime_to_str($mktime);
 
-
 	return slice_date($f_date_str); 
 }
 
@@ -270,8 +271,6 @@ function get_f_date_mktime($dates)
 	//
 	// Por ejemplo si las fechas son 2012 y 201302 entonces devolverá
 	// 201302[ultimo_de_mes]
-	//
-	// S 
 	//
 	// $dates: diccionario con 
 	//		$f_date['year'] 	'YYYY'
@@ -373,15 +372,12 @@ function gen_dates_arr($dates) {
 	// takes two dates formatted as YYYYMMDD and creates an
 	// inclusive array of the dates between the from and to dates.
 	//
-	// Esto nos servirá para pintar el eje de las fechas
+	// Esto nos servirá para generar el array de fechas para poder 
+	// pintar el eje temporal en la gráfica (eje horizontal)
 	//
 	// Por ejemplo si el formato es YYYYMM y las fechas inicial y final 2012, 201202,
-	// entonces pintará desde 201201 hasta 201202 inclusive
+	// entonces pintará desde 201201 hasta el 201202 inclusive (2 datos = 2 fechas)
 
-	// see($d);
-	
-	// $iDateFrom = mktime(1,0,0, $i_date['month'], $i_date['day'], $i_date['year']);
-	// $iDateTo = mktime(1,0,0, $strDateTo['month'], $strDateTo['day'], $strDateTo['year']);
 	// cambiamos la fecha final dependiendo del formato a usar
 	$iDateFrom = date_to_time($dates['i_date']);
 	$iDateTo = get_f_date_mktime($dates);  
@@ -420,8 +416,6 @@ function gen_dates_arr($dates) {
 		}
 		break;
 	}
-
-	// see($dates_arr);
 
 	// quitamos el elemento de más que siempre aparece..
 	array_pop($dates_arr);

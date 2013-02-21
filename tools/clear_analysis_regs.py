@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf8 -*-
 
-# borra registros en analysis
+# borra registros en analysis para una fecha o rango de fechas
 
 import sys
 

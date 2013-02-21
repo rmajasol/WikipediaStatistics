@@ -1,35 +1,110 @@
 body
 {
-    width: auto;
-    margin: 30px auto;
+    margin: 27px auto;
+    padding-bottom: 9px;
     text-align: center;
-    background: green
+    /*width: 80%;*/
 }
 
-#chart_dates, #graph_selectors
-{
-	/*display: inline-block;*/
-	border: 1px solid black
-}
-
-#date_selectors input
-{
-    width: 150px
-}
-
-#graph_selectors
-{
-	vertical-align: top
-}
-#graph_selectors ul li{
-    list-style: none
+footer{
+    color: grey;
+    font-size: 14px;
 }
 
 #chart_div
 {
-    width: 1000px;
-    margin: auto;
-    height: 500px;
-    padding: -40px;
+    display: inline-block;
+    height: 400px;
+    margin: -22px auto 0 auto;
+    position: relative;
+    right: 28px;
+    width: 1024px;
 }
+
+#chart_empty_msg
+{
+    display: inline-block;
+    margin: 41px 0 54px;
+}
+
+#date_selectors
+{
+    margin-top: 10px;
+}
+#date_selectors input
+{
+    text-align: center;
+    width: 120px;
+}
+
+
+/* graph selectors */
+
+#graph_selectors
+{
+    border-radius: 5px 5px 5px 5px;
+    box-shadow: 2px -1px 7px grey;
+    display: inline-block;
+    margin: -5px auto 24px;
+    padding: 3px 5px 10px;
+    position: relative;
+}
+#graph_selectors ul
+{
+    margin: 10px 25px 15px;
+    padding: 0;
+    text-align: left;
+}
+
+#graph_selectors li
+{
+    list-style: none;
+    margin: 7px;
+}
+
+#graph_selectors ul li select
+{
+    margin-right: 3px
+}
+#graph_selectors ul li ul, #graph_selectors ul li a
+{
+    display: inline-block;
+}
+
+#graph_selectors ul li a
+{
+    background: none repeat scroll 0 0 gainsboro;
+    border-radius: 14px 14px 14px 14px;
+    color: #828282;
+    display: inline-block;
+    padding: 2px 7px 3px;
+    text-decoration: none;
+}
+
+#graph_selectors ul li a:hover
+{
+    background: grey;
+    color: white
+}
+
+#error_box
+{
+    background: none repeat scroll 0 0 rgba(255, 255, 255, 0.89);
+    box-shadow: 3px -1px 8px grey;
+    color: #8F8F8F;
+    left: -117px;
+    position: absolute;
+    top: 48px;
+    width: 500px;
+    z-index: 0;
+}
+
+.info_box
+{
+ box-shadow: 3px -1px 8px grey;
+ color: #8F8F8F;
+ padding: 10px 15px;
+}
+
+
 

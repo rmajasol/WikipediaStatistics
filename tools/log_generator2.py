@@ -32,7 +32,12 @@ def crear_log(date):
 
 	# saltamos de línea en el archivo hasta llegar al siguiente bloque
 	for i in range(0, LINES_TO_WRITE * block_number):
-		lines.readline()
+		# si se ha llegado al final del archivo 'log_lines' entonces
+		# se vuelve a leer desde el principio
+		if not lines.readline():
+			block_number = 0
+			crear_log(date)
+			return
 
 	# abrimos el archivo destino donde escribiremos el bloque de líneas escogido
 	dest_file = test_logs_dir + "log-" + date.strftime('%Y%m%d')
@@ -41,8 +46,6 @@ def crear_log(date):
 	# escribimos cada línea en el archivo destino con la fecha cambiada
 	for i in range(0, LINES_TO_WRITE):
 		line = lines.readline()
-
-		# si se llega al final del log descomprimido se vuelve otra vez al principio..
 		if not line:
 			block_number = 0
 			crear_log(date)
@@ -76,7 +79,7 @@ def crear_log(date):
 if __name__ == "__main__":
 
 	d = date.today()
-	d = d.replace(year=2008, month=1, day=1)
+	d = d.replace(year=2008, month=9, day=20)
 	d2 = d.replace(year=2012, month=1, day=1)
 
 	# mientras que la fecha d sea menor a la final (d2)..

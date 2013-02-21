@@ -1,15 +1,21 @@
 // cargamos el paquete para poder pintar las gráficas
 google.load("visualization", "1", {packages:["corechart"]});
 
+// para indicarnos si las gráficas ya se han añadido al DOM
+var chart_is_visible = false;
+
 // fechas mínima y máxima a poder introducir
 var min_date;
+var min_date_str;
 var max_date;
+var max_date_str;
 
 // fechas inicial y final
 var i_date;
+var f_date;
+
 var i_year;
 var i_month;
-var f_date;
 var f_year;
 var f_month;
 
@@ -17,20 +23,14 @@ var f_month;
 var graphs = [];
 
 // conjuntos de ediciones, acciones y namespaces
-var editions = ['EN', 'ES', 'FR', 'IT', 'JA', 'NL', 'PL', 'PL', 'PT', 'RU'];
+var editions = ['DE', 'EN', 'ES', 'FR', 'IT', 'JA', 'NL', 'PL', 'PT', 'RU'];
 var actions = {
 	'Visited': 'null',
+	'Edit': '0',
 	'History': '1',
-	'Save': '2',
+	'Saved': '2',
 	'Search': '4'
 };
-var namespaces = {
-	'Article': '0',
-	'Article:talk': '2',
-	'User': '3',
-	'User:talk': '4'
-};
-
 
 
 //
@@ -38,28 +38,33 @@ var namespaces = {
 //
 $(document).on('ready', function(){
 
-	min_date = $("#date_selectors input[name=i_date]").val();
-	max_date = $("#date_selectors input[name=f_date]").val();
+	min_date = sliceDate_toStr($("#date_selectors input[name=min_date]").val());
+	min_date_str = unslice(min_date);
+	max_date = sliceDate_toStr($("#date_selectors input[name=max_date]").val());
+	max_date_str = unslice(max_date);
+
+	i_date = $("#date_selectors input[name=i_date]").val(min_date['year'] + min_date['month']);
+	f_date = $("#date_selectors input[name=f_date]").val(max_date['year'] + max_date['month']);
 
 	var date_selectors = $("#date_selectors input[type=text]");
 	date_selectors.on('keyup', refreshChart);
 
-	// var add_graph_link = $("#graph_selectors a");
-	// add_graph_link.on('click', function(e){
-	// 	e.preventDefault();
-	// 	addGraphSelector();
-	// });
+	var add_graph_link = $("#graph_selectors a");
+	add_graph_link.on('click', function(e){
+		e.preventDefault();
+		addGraphSelector();
+	});
 
-addGraphSelector();
+	addGraphSelector();
+	refreshChart();
 });
 
 
 function setErrorBox(msg)
 {
 	$("#error_box").show();
-	$("#error_box").text(msg);
+	$("#error_box").html(msg);
 }
-
 
 
 function sliceDate_toInt(field)
@@ -91,6 +96,16 @@ function sliceDate_toStr(field)
 		month: month,
 		day: day
 	};
+}
+
+
+function unslice(sliced)
+{
+	var str = "";
+	for(var key in sliced)
+		str += sliced[key];
+
+	return str;
 }
 
 
@@ -134,8 +149,10 @@ function formatOk(field)
 
 	if(date_fmt(field) === 'invalid')
 	{
-		setErrorBox("Introduzca fechas en formatos: YYYY, YYYYMM o YYYYMMDD, " +
-			"o bien introduzca 'init' y/o 'end'");
+		setErrorBox(
+			"Introduzca fechas en formatos: YYYY, YYYYMM o YYYYMMDD" +
+			"<br>Fecha mínima: " + min_date_str + ", máxima: " + max_date_str
+			);
 		return false;
 	}
 
@@ -172,15 +189,13 @@ function fieldsOk()
 		return false;
 
 	// min-max
-	min_date_sliced = sliceDate_toStr(min_date);
-	min_year = min_date_sliced['year'];
-	min_month = min_date_sliced['month'];
-	min_day = min_date_sliced['day'];
+	min_year = min_date['year'];
+	min_month = min_date['month'];
+	min_day = min_date['day'];
 
-	max_date_sliced = sliceDate_toStr(max_date);
-	max_year = max_date_sliced['year'];
-	max_month = max_date_sliced['month'];
-	max_day = max_date_sliced['day'];
+	max_year = max_date['year'];
+	max_month = max_date['month'];
+	max_day = max_date['day'];
 
 	// initial-final
 	i_date_sliced = sliceDate_toStr(i_date);
@@ -247,18 +262,20 @@ function fieldsOk()
 }
 
 
-// elimina una gráfica
-function removeGraph(event, li)
+function removeGraph_li(event, li)
 {
+	// elimina una gráfica
+
 	event.preventDefault();
 	li.remove();
-
 	refreshChart();
 }
 
 
-function addEvents(li)
+function addToCurrent(li)
 {
+	// añade eventos a un li de la lista de gráficas
+
 	edition = li.find("select[name=edition]");
 	action = li.find("select[name=action]");
 
@@ -273,16 +290,15 @@ function addEvents(li)
 		// keyCode es 9 para la tecla TAB
 		if (keyCode == 9) {
 			e.preventDefault();
-			refreshChart();
-			addGraphSelector();
-			// movemos el foco a la selección de la siguiente gráfica..
-			li.next().find("select[name=edition]").focus();
+			
+			if(edition.val() !== '' && action.val() !== '')
+			{
+				refreshChart();
+				addGraphSelector();
+			}
+			else
+				edition.focus();
 		}
-	});
-	
-	var remove_link = li.find("a");
-	remove_link.on('click', function(e){
-		removeGraph(e, li);
 	});
 
 	// si pulsamos la tecla de retroceso estando en algún selector entonces
@@ -290,13 +306,26 @@ function addEvents(li)
 	selector = li.find("select");
 	selector.on('keyup', function(e){
 		var keyCode = e.keyCode || e.which;
-
 		if (keyCode == 8) {
 			e.preventDefault();
-			removeGraph(e, li.prev());
+			removeGraph_li(e, li.prev());
 		}
 	});
 }
+
+
+function addToPrevious(li)
+{
+	var remove = "<a class='removeGraph_li' href='#'>x</a>";
+	li.append(remove);
+
+	var remove_link = li.find("a.removeGraph_li");
+	remove_link.on('click', function(e){
+		removeGraph_li(e, li);
+	});
+}
+
+
 
 
 function addGraphSelector()
@@ -307,6 +336,7 @@ function addGraphSelector()
 	"<select name='edition'>" +
 	"<option value=''>Edición..</option>" +
 	"<option value='ALL'>All</option>" +
+	"<option value='ALL-EN'>All-EN</option>" +
 	"<option value='TOTAL'>Total</option>";
 	for(var i in editions)
 		edition += "<option value='" + editions[i] + "'>" + editions[i] + "</option>";
@@ -315,22 +345,28 @@ function addGraphSelector()
 	var action =
 	"<select name='action'>" +
 	"<option value=''>Acción..</option>" +
-	"<option value='ALL'>All</option>";
-	// "<option value='TOTAL'>Total</option>";
-	// http://stackoverflow.com/questions/921789/how-to-loop-through-javascript-object-literal-with-objects-as-members
+	"<option value='ALL'>All</option>" +
+	"<option value='ALL-Visited'>All-Visited</option>";
 	for (var key in actions)
 		action += "<option value='" + actions[key] + "'>" + key + "</option>";
 	action += "</select>";
 
-	var remove = "<a href='#'>[x]</a>";
-
-	var li = "<li>" + edition + action + remove + "</li>";
-	var ul = $('#graph_selectors ul');
+	var li = "<li>" + edition + action + "</li>";
+	var ul = $('#graph_selectors > ul');
 	ul.append(li);
 
-	// añadimos los eventos al último <li> creado
 	li = ul.find("li:last");
-	addEvents(li);
+
+	// añadimos al <li> actual
+	addToCurrent(li);
+
+	// añadimos al <li> anterior
+	var li_count = ul.children().length;
+	if(li_count > 1)
+		addToPrevious(li.prev());
+
+	// ponemos el foco en el nuevo selector
+	li.find("select[name=edition]").focus();
 }
 
 
@@ -353,8 +389,24 @@ function drawChart(result)
 	//	}
 	// }"
 
+
+	// si no hay nada mostramos el mensaje 'seleccione al menos una gráfica'
 	if(result === null)
+	{
+		$('#chart_div').remove();
+		$('#chart_empty_msg').show();
+		chart_is_visible = false;
 		return;
+	}
+	
+
+	// escondemos el mensaje si hay alguna gráfica por pintar
+	$('#chart_empty_msg').hide();
+	if(!chart_is_visible)
+	{
+		$('body').prepend('<div id="chart_div"></div>');
+		chart_is_visible = true;
+	}
 
 	var dates = result.dates;
 	var graphs = result.graphs;
@@ -384,34 +436,35 @@ function drawChart(result)
 	//
 	data.addRows(dates.length);
 
-	var value_num; // posición de cada valor dentro del conjunto de valores de cada gráfica
+	var row_num; // número de fila
 	var i;
 
 	// primero las fechas
 	for(i in dates)
 	{
-		value_num = parseInt(i, 10);
-		data.setCell(value_num, 0, dates[value_num]);
+		row_num = parseInt(i, 10);
+		data.setCell(row_num, 0, dates[row_num]);
 	}
 
-	//luego cada gráfica
-	//Empieza en 1 porque ya he pintado todos los días (todos las celdas de la columna 0).
-	//Falta la columna para cada gráfica
+	// ahora añadimos cada gráfica
+	// Empieza en columna 1 porque ya se han pintado todas las fechas
+	// (todas las celdas de la columna 0) = eje horizontal completo
+	// Falta rellenar la columna para cada gráfica devuelta en la petición AJAX
 	var column_num = 1;
 
 	for(graph in graphs)
 	{
 		if (graphs.hasOwnProperty(graph))
 		{
-			value_num = 0; // representa el número de fila para la columna 'column_num'
-			
+			row_num = 0; // representa el número de fila para la columna 'column_num'
+
 			// recorremos los datos de la gráfica
 			var graph_data = graphs[graph];
 			for(i in graph_data)
 			{
 				value = parseInt(graph_data[i], 10);
-				data.setCell(value_num, column_num, value);
-				value_num++;
+				data.setCell(row_num, column_num, value);
+				row_num++;
 			}
 			// "ALL_saved -> 0,5,4,1,5,0,0,0,0,0"
 			// var i = graph + " -> " + graphs[graph];
@@ -422,10 +475,49 @@ function drawChart(result)
 
 	var options = {
 		title: 'Wikipedia Statistics'
+		// 'chartArea': {'width': '100%', 'height': '100%'}
+		// 'chartArea': {'width': '80%'},
+		// 'legend': {'position': 'bottom'}
+		// width: '1000px'
 	};
 
 	var chart = new google.visualization.LineChart(document.getElementById('chart_div'));
 	chart.draw(data, options);
+}
+
+
+function check_for_disable_options(edition, action)
+{
+	// -> si edition está en ALL o ALL-EN entonces 'All' en action aparece desactivado
+	//
+	// -> si action está en ALL entonces ALL y ALL-EN en edition aparecen desactivados
+	//
+	// http://stackoverflow.com/questions/4610652/jquery-select-option-disabled-if-selected-in-other-select
+	
+	var edition_val = edition.val();
+	var action_val = action.val();
+
+	if(edition_val === 'ALL' || edition_val === 'ALL-EN')
+	{
+		action.children("option[value='ALL']").attr('disabled', true);
+		action.children("option[value='ALL-Visited']").attr('disabled', true);
+	}
+	else
+	{
+		action.children("option[value='ALL']").removeAttr('disabled');
+		action.children("option[value='ALL-Visited']").removeAttr('disabled');
+	}
+
+	if(action_val === 'ALL' || action_val === 'ALL-Visited')
+	{
+		edition.children("option[value='ALL']").attr('disabled', true);
+		edition.children("option[value='ALL-EN']").attr('disabled', true);
+	}
+	else
+	{
+		edition.children("option[value='ALL']").removeAttr('disabled');
+		edition.children("option[value='ALL-EN']").removeAttr('disabled');
+	}
 }
 
 
@@ -446,10 +538,14 @@ function refreshChart()
 	// recorre cada selección de la lista
 	// http://stackoverflow.com/questions/2722582/jquery-get-each-divs-sub-child-divs-and-grab-info-into-an-array
 	$("#graph_selectors li").each(function() {
-		var edition = $(this).find("select[name=edition]").val();
-		var action = $(this).find("select[name=action]").val();
+		var edition = $(this).find("select[name=edition]");
+		var action = $(this).find("select[name=action]");
 
-		var graph;
+		// en cada par de selectores vemos si hay que desactivar alguna opción
+		check_for_disable_options(edition, action);
+
+		edition = edition.val();
+		action = action.val();
 
 		if (edition === '' || action === '')
 			return;
@@ -459,9 +555,10 @@ function refreshChart()
 		//
 		// si un selector es 'ALL' entonces se pintará todo el conjunto
 		//
+		var i, key, graph;
 		if (edition === 'ALL')
 		{
-			for(var i in editions)
+			for(i in editions)
 			{
 				graph = {
 					edition: editions[i],
@@ -470,10 +567,26 @@ function refreshChart()
 				graphs.push(graph);
 			}
 		}
+		// si se han elegido todas la ediciones menos la inglesa..
+		else if (edition === 'ALL-EN')
+		{
+			for(i in editions)
+			{
+				if (editions[i] !== 'EN')
+				{
+					graph = {
+						edition: editions[i],
+						action: action
+					};
+					graphs.push(graph);
+				}
+			}
+		}
 
 		if (action === 'ALL')
 		{
-			for (var key in actions) {
+			for (key in actions)
+			{
 				graph = {
 					edition: edition,
 					action: actions[key]
@@ -481,8 +594,24 @@ function refreshChart()
 				graphs.push(graph);
 			}
 		}
+		// si se ha elegido pintar todas las acciones para la edición menos Visited..
+		else if (action === 'ALL-Visited')
+		{
+			for (key in actions)
+			{
+				if (key !== 'Visited')
+				{
+					graph = {
+						edition: edition,
+						action: actions[key]
+					};
+					graphs.push(graph);
+				}
+			}
+		}
 
-		if (edition !== 'ALL' && action !== 'ALL')
+		if (edition !== 'ALL' && edition !== 'ALL-EN' &&
+			action !== 'ALL' && action !== 'ALL-Visited')
 		{
 			graph = {
 				edition: edition,
@@ -496,7 +625,6 @@ function refreshChart()
 	if (graphs.length === 0)
 	{
 		drawChart(result=null);
-		$('#chart_div').html('');
 		return;
 	}
 

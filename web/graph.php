@@ -13,7 +13,7 @@ require 'functions.php';
 
 // array con todas las fechas en el intervalo
 
-// decodificamos lo que recibimos en la petición AJAX
+// decodificamos lo que recibimos de la petición AJAX
 $chart = json_decode($_POST['chart']);
 $i_date = $chart->{'i_date'};
 $f_date = $chart->{'f_date'};
@@ -36,13 +36,9 @@ $dates = array(
 
 
 $dates = complete_dates($dates);
-// see($dates);
 
 $dates_arr = gen_dates_arr($dates);
 
-
-
-// see($dates_arr);
 
 // array(426) { [0]=> string(10) "2012-01-01" [1]=> string(10) "20
 
@@ -282,10 +278,14 @@ function gen_row($graph)
 	// 	[
 	//		["2012-01-28","7361"],["2012-01-29","7349"],["2012-01-30","7366"],
 	//		["2012-01-31","7182"],["2012-02-01","7211"],["2012-02-02","7163"],
-	//		["2012-02-03","7114"]
+	//		["2012-02-03","7114"]...
 	//	]
 	//
 	//	Para YYYYMM:
+	//	
+	//	[
+	//		["2012-01","45619"],["2012-02","73849"]...
+	//	]
 
 	// $i_date = slice_date($GLOBALS['i_date']);
 	// $f_date = slice_date($GLOBALS['f_date']);

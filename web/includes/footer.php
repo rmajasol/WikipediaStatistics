@@ -1,5 +1,5 @@
 </body>
     <footer>
-        Footer de la página
+        Wikipedia Statistics, 2013
     </footer>
 </html>
