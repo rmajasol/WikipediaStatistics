@@ -38,6 +38,16 @@ var actions = {
 //
 $(document).on('ready', function(){
 
+	// cuadro de información '#info'
+	$( "#info" ).accordion({
+		collapsible: true,
+		active: false,
+		clearstyle: true,
+		heightStyle: 'fill'
+		// autoHeight: false
+		// refresh: true
+	});
+
 	min_date = sliceDate_toStr($("#date_selectors input[name=min_date]").val());
 	min_date_str = unslice(min_date);
 	max_date = sliceDate_toStr($("#date_selectors input[name=max_date]").val());
@@ -70,7 +80,7 @@ function setErrorBox(msg)
 function sliceDate_toInt(field)
 {
 	// divide cadena YYYYMMDD en diccionario con año, mes, día enteros
-	
+
 	var year = parseInt(field.substring(0, 4), 10);
 	var month = parseInt(field.substring(4, 6), 10);
 	var day = parseInt(field.substring(6, 9), 10);
@@ -150,8 +160,8 @@ function formatOk(field)
 	if(date_fmt(field) === 'invalid')
 	{
 		setErrorBox(
-			"Introduzca fechas en formatos: YYYY, YYYYMM o YYYYMMDD" +
-			"<br>Fecha mínima: " + min_date_str + ", máxima: " + max_date_str
+			"Valid date formats: YYYY, YYYYMM o YYYYMMDD" +
+			"<br>Minimum date: " + min_date_str + ", deadline: " + max_date_str
 			);
 		return false;
 	}
@@ -202,7 +212,7 @@ function fieldsOk()
 	i_year = i_date_sliced['year'];
 	i_month = i_date_sliced['month'] === '' ? "01" : i_date_sliced['month'];
 	i_day = i_date_sliced['day'] === '' ? "01" : i_date_sliced['day'];
-	
+
 	f_date_sliced = sliceDate_toStr(f_date);
 	f_year = f_date_sliced['year'];
 	f_month = f_date_sliced['month'] === '' ? "01" : f_date_sliced['month'];
@@ -210,7 +220,7 @@ function fieldsOk()
 
 	if(i_year + i_month + i_day  >=  f_year + f_month + f_day)
 	{
-		setErrorBox("La fecha final debe ser mayor a la inicial");
+		setErrorBox("The end date must be greater than the initial");
 		return false;
 	}
 
@@ -221,12 +231,12 @@ function fieldsOk()
 		case 'YYYY':
 		if(i_year < min_year)
 		{
-			setErrorBox("El año mínimo es " + min_year);
+			setErrorBox("Minimum year: " + min_year);
 			return false;
 		}
 		if(f_year > max_year)
 		{
-			setErrorBox("El año máximo es " + max_year);
+			setErrorBox("Maximum year: " + max_year);
 			return false;
 		}
 		break;
@@ -234,12 +244,12 @@ function fieldsOk()
 		case 'YYYYMM':
 		if(i_year + i_month < min_year + min_month)
 		{
-			setErrorBox("El mes mínimo es " + min_year + min_month);
+			setErrorBox("Minimum month: " + min_year + min_month);
 			return false;
 		}
 		if(f_year + f_month > max_year + max_month)
 		{
-			setErrorBox("El mes máximo es " + max_year + max_month);
+			setErrorBox("Maximum month: " + max_year + max_month);
 			return false;
 		}
 		break;
@@ -247,12 +257,12 @@ function fieldsOk()
 		case 'YYYYMMDD':
 		if(i_year + i_month + i_day < min_year + min_month + min_day)
 		{
-			setErrorBox("El día mínimo es " + min_date);
+			setErrorBox("Minimum day: " + min_year + min_month + min_day);
 			return false;
 		}
 		if(f_year + f_month + f_day > max_year + max_month + max_day)
 		{
-			setErrorBox("El día máximo es " + max_date);
+			setErrorBox("Maximum day: " + max_year + max_month + max_day);
 			return false;
 		}
 	}
@@ -290,7 +300,7 @@ function addToCurrent(li)
 		// keyCode es 9 para la tecla TAB
 		if (keyCode == 9) {
 			e.preventDefault();
-			
+
 			if(edition.val() !== '' && action.val() !== '')
 			{
 				refreshChart();
@@ -304,13 +314,29 @@ function addToCurrent(li)
 	// si pulsamos la tecla de retroceso estando en algún selector entonces
 	// elimina la gráfica anterior
 	selector = li.find("select");
-	selector.on('keyup', function(e){
+
+	// cuando se trata de pulsar la tecla de retroceso tenemos que especificar
+	// keydown en lugar de keyup, ya que por ejemplo en chrome se retrocede
+	// a la página anterior al presionar, y no al soltar la tecla
+	selector.on('keydown', function(e){
 		var keyCode = e.keyCode || e.which;
 		if (keyCode == 8) {
 			e.preventDefault();
 			removeGraph_li(e, li.prev());
 		}
 	});
+
+	// usando el plugin jquery.hotkeys.js
+	// selector.bind('keydown.backspace', function(e){
+	// 	var keyCode = e.keyCode || e.which;
+	// 	if (keyCode == 8) {
+	// 		e.preventDefault();
+	// 		// window.history.forward();
+	// 		// e.keyCode = 0;
+	// 		// e.returnValue = false;
+	// 		removeGraph_li(e, li.prev());
+	// 	}
+	// });
 }
 
 
@@ -334,17 +360,17 @@ function addGraphSelector()
 
 	var edition =
 	"<select name='edition'>" +
-	"<option value=''>Edición..</option>" +
+	"<option value=''>Edition..</option>" +
 	"<option value='ALL'>All</option>" +
 	"<option value='ALL-EN'>All-EN</option>" +
 	"<option value='TOTAL'>Total</option>";
 	for(var i in editions)
 		edition += "<option value='" + editions[i] + "'>" + editions[i] + "</option>";
 	edition += "</select>";
-	
+
 	var action =
 	"<select name='action'>" +
-	"<option value=''>Acción..</option>" +
+	"<option value=''>Action..</option>" +
 	"<option value='ALL'>All</option>" +
 	"<option value='ALL-Visited'>All-Visited</option>";
 	for (var key in actions)
@@ -398,7 +424,7 @@ function drawChart(result)
 		chart_is_visible = false;
 		return;
 	}
-	
+
 
 	// escondemos el mensaje si hay alguna gráfica por pintar
 	$('#chart_empty_msg').hide();
@@ -493,7 +519,7 @@ function check_for_disable_options(edition, action)
 	// -> si action está en ALL entonces ALL y ALL-EN en edition aparecen desactivados
 	//
 	// http://stackoverflow.com/questions/4610652/jquery-select-option-disabled-if-selected-in-other-select
-	
+
 	var edition_val = edition.val();
 	var action_val = action.val();
 
@@ -633,7 +659,7 @@ function refreshChart()
 	// Si hay alguna gráfica para pintar entonces realizamos la petición AJAX
 	// y añadimos nuevos selectores
 	//
-	
+
 	// a enviar en la petición AJAX transformado en objeto JSON
 	var chart = {
 		i_date: i_date,

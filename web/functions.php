@@ -10,9 +10,10 @@ function see($var)
 }
 
 
-// devuelve los registros de realizar la query a la BD 
 function do_query($query)
 {
+	// devuelve los registros de realizar la query a la BD 
+
 	$conexion=mysql_connect(DB_HOST, DB_USER, DB_PASS)
 	or die("Problemas en la conexion");
 

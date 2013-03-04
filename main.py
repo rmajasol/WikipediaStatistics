@@ -63,7 +63,7 @@ def run_for_day(date):
 		log_msg("---- Procesando día " + day + " ----")
 
 		# transferimos
-		# transfer_log.run(date, test_mode)
+		transfer_log.run(date, test_mode)
 
 		# ejecutamos wsq
 		run_wikisquilter.run(date, test_mode)
@@ -86,8 +86,13 @@ def run_auto():
 
 	# si hoy es el día 1 procesaremos los logs entre los días 20 y último día del mes anterior
 	if today == 1:
-		date -= timedelta(1)
+		date -= timedelta(1)  # fecha para el día anterior a primero de mes
 		top_day = date.day
+
+		# descarga logs entre el 20 y último día de mes anterior
+		transfer_log.run(date.replace(day=20), top_day)
+
+		# procesa entre 1 y 9
 		for i in range(20, top_day + 1):
 			date = date.replace(day=i)  # http://docs.python.org/2/library/datetime.html
 			run_for_day(date)
@@ -114,11 +119,13 @@ def run_manual():
 	"""
 	d = str_to_date(args.manual[0])
 
+	# descargamos todos los logs primero
 	if len(args.manual) == 1:
+		download(d)
 		run_for_day(d)
 	else:
 		d2 = str_to_date(args.manual[1])
-		# mientras que la fecha d sea menor a la final (d2)..
+		# mientras que la fecha d sea menor o igual a la final (d2)..
 		while d <= d2:
 			run_for_day(d)
 			d += timedelta(1)
@@ -157,6 +164,7 @@ init_logger("main", test=test_mode)
 
 # guardamos la fecha actual en 'date' con los demás valores (hora, minuto..) seteados a 0
 date = get_now_to_zero()
+
 
 # según estemos ejecutando en modo manual o no..
 if manual_mode:

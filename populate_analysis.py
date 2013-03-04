@@ -37,8 +37,7 @@ def get_table_name_year(table_name):
 
 def wsq_to_txt(table_name):
 	"""
-	Vuelca en tmp/[table_name]_wsq_result.txt el resultado
-	de la query a la BD squidlogs
+	Vuelca en tmp/dumped.txt el resultado de la query a la BD squidlogs
 	"""
 	if(table_name == 'visited'):
 		query = "select date(f_date_time), substr(dayname(f_date_time),1,2), " + \
@@ -65,8 +64,8 @@ def wsq_to_txt(table_name):
 
 def is_new_year(table_name):
 	"""
-	Mira en el txt el año y si no hay creada una tabla para ese
-	año devolverá True
+	Mira en el txt el año y si no hay fecha alguna procesada para ese año
+	entonces devolverá True
 	"""
 	# si el fichero no tiene nada devolvemos False para no crear luego una tabla vacia
 	if is_empty(TXT_FILE):
@@ -81,7 +80,7 @@ def is_new_year(table_name):
 		# que coincide con dicha línea
 		l = f.readline()
 		m = re.match(".*(\d{4})\-\d{2}.*", l)
-		# seteamos txt_year con el año del result.txt
+		# seteamos txt_year con el año del dumped.txt
 		global txt_year
 		txt_year = m.group(1)
 

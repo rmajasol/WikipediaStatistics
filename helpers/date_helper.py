@@ -32,17 +32,18 @@ def str_to_date(str):
 
 
 # http://stackoverflow.com/questions/6289646/python-function-as-a-function-argument
-def do_for_dates(function, args):
+def do_for_dates(function, dates):
 	"""
 	Ejecuta una función dada 'function' sobre una fecha concreta si sólo se pasa una
-	como argumento en 'args' y sobre un intervalo de fechas si se pasa como argumento
+	como argumento, y sobre un rango de fechas si se pasa como argumento
 	una fecha inicial y otra final
 	"""
-	d = str_to_date(args.date[0])
-	if len(args.date) == 1:
+	d = str_to_date(dates[0])
+
+	if len(dates) == 1:
 		function(d)
 	else:
-		d2 = str_to_date(args.date[1])
+		d2 = str_to_date(dates[1])
 		while d <= d2:
 			function(d)
 			d += timedelta(1)

@@ -7,8 +7,10 @@ from helpers.logging_helper import *
 from helpers.exec_helper import exec_proc, halt
 
 
-# ejecutamos wikisquilter sobre el log de la fecha dada
 def run(date, test):
+	"""
+	Ejecutamos wikisquilter sobre el log de la fecha dada
+	"""
 
 	DB_USER = Config().get_db_user()
 	DB_PASS = Config().get_db_password()

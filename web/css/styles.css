@@ -9,6 +9,11 @@ body
 footer{
     color: grey;
     font-size: 14px;
+    margin-top: 22px;
+}
+
+#box{
+
 }
 
 #chart_div
@@ -37,15 +42,62 @@ footer{
     width: 120px;
 }
 
+#info
+{
+
+}
+
+#info h3
+{
+    font-size: 1.1em;
+    margin-top: 5px;
+    padding: 4px 24px;
+    text-align: left;
+}
+
+#info div
+{
+    overflow: scroll;
+    padding: 0 11px;
+}
+
+#info div h1
+{
+    font-size: 1.2em;
+    margin: 0 auto 5px;
+    text-align: left;
+}
+
+#info div p
+{
+    text-align: justify;
+}
+
+#info ul
+{
+    margin-left: 10px;
+    margin-top: 3px;
+    padding-left: 6px;
+    text-align: left;
+}
+
+#info-parent
+{
+    display: inline-block;
+    font-size: 0.75em;
+    margin-left: 12px;
+    position: absolute;
+    vertical-align: top;
+    width: 235px;
+    height: 290px
+}
+
 
 /* graph selectors */
 
 #graph_selectors
 {
-    border-radius: 5px 5px 5px 5px;
-    box-shadow: 2px -1px 7px grey;
     display: inline-block;
-    margin: -5px auto 24px;
     padding: 3px 5px 10px;
     position: relative;
 }
@@ -96,14 +148,27 @@ footer{
     position: absolute;
     top: 48px;
     width: 500px;
-    z-index: 0;
+    z-index: 1;
 }
 
 .info_box
 {
- box-shadow: 3px -1px 8px grey;
- color: #8F8F8F;
- padding: 10px 15px;
+   box-shadow: 3px -1px 8px grey;
+   color: #8F8F8F;
+   padding: 10px 15px;
+}
+
+.box-style1
+{
+    border-radius: 5px 5px 5px 5px;
+    box-shadow: 2px -1px 7px grey;
+}
+
+
+.parent-non-static
+{
+    position: relative;
+    height: auto;
 }
 
 

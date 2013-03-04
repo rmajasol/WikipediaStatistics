@@ -11,8 +11,10 @@ class Config(object):
 	de configuracion y realizar otras funciones de utilidad
 	"""
 
+	# secciones en el archivo de configuración config.cfg
 	SECTION__HOSTS = "hosts"
 	SECTION__DB = "db"
+	SECTION__DIR = "dirs"
 
 	cfg = ConfigParser.ConfigParser()
 
@@ -51,14 +53,14 @@ class Config(object):
 	def get_db_password(self):
 		return self.read(self.SECTION__DB, "db_pass")
 
-	def get_db_name(self):
-		return self.read(self.SECTION__DB, "db_name")
-
 	def get_db_host(self):
 		return self.read(self.SECTION__DB, "db_host")
 
 	def get_db_port(self):
 		return self.read(self.SECTION__DB, "db_port")
+
+	def get_db_name(self):
+		return self.read(self.SECTION__DB, "db_name")
 
 	#
 	# SECTION__HOSTS
@@ -145,14 +147,13 @@ class Config(object):
 	def year_not_exists(self, year, test):
 		"""
 		Comprueba si no hay ningún log ya procesado para el año dado
+		http://maengora.blogspot.com.es/2010/10/receta-python-buscar-una-cadena-de-un.html
 		"""
-		# http://maengora.blogspot.com.es/2010/10/receta-python-buscar-una-cadena-de-un.html
 		filename = self.get_processed_list_filename(test)
 		f = open(filename)
 		lines = f.readlines()
 		for l in lines:
-			l = l[:4]
-			if l == year:
+			if l[:4] == year:
 				return False
 		return True
 
@@ -170,8 +171,8 @@ class Config(object):
 	def remove_from_processed_list(self, date, test):
 		"""
 		Quita una fecha de la lista de procesadas
+		http://stackoverflow.com/questions/5947833/deleting-a-line-from-a-file-in-python
 		"""
-		# http://stackoverflow.com/questions/5947833/deleting-a-line-from-a-file-in-python
 		filename = self.get_processed_list_filename(test)
 		f = open(filename)
 		output = []
