@@ -39,40 +39,26 @@
 #		python main.py -t -m 20130101 20130220
 
 
-from datetime import timedelta
-from argparse import ArgumentParser
-
-from helpers.config_helper import *
-from helpers.logging_helper import *
 from helpers.date_helper import *
-
-import transfer_log
-import run_wikisquilter
-import populate_analysis
-import clear_squidlogs
 
 
 def run_for_day(date):
 	"""
 	Ejecuta todas la tareas para procesar el día dado
 	"""
-	processed = Config().is_processed_date(date, test_mode)
-	day = Config().get_log_date(date)
+	day = getConfig().get_log_date(date)
 
-	if not processed:
+	# Si la fecha dada no está procesada por completo (para squidlogs y analysis)..
+	if not getConfig().is_full_processed(date):
 		log_msg("---- Procesando día " + day + " ----")
 
-		# transferimos
-		transfer_log.run(date, test_mode)
-
+		# transferimos de remoto a local
+		transfer_log.run(date)
 		# ejecutamos wsq
-		run_wikisquilter.run(date, test_mode)
+		run_wikisquilter.run(date)
+		# populamos analysis desde squidlogs
+		populate_analysis.run(date)
 
-		# populamos analysis con resultados
-		populate_analysis.run(date, test_mode)
-
-		# vaciamos BD squidlogs
-		clear_squidlogs.run()
 	else:
 		log_msg("#### No es necesario procesar el día " + day + " ####")
 
@@ -88,11 +74,6 @@ def run_auto():
 	if today == 1:
 		date -= timedelta(1)  # fecha para el día anterior a primero de mes
 		top_day = date.day
-
-		# descarga logs entre el 20 y último día de mes anterior
-		transfer_log.run(date.replace(day=20), top_day)
-
-		# procesa entre 1 y 9
 		for i in range(20, top_day + 1):
 			date = date.replace(day=i)  # http://docs.python.org/2/library/datetime.html
 			run_for_day(date)
@@ -119,9 +100,7 @@ def run_manual():
 	"""
 	d = str_to_date(args.manual[0])
 
-	# descargamos todos los logs primero
 	if len(args.manual) == 1:
-		download(d)
 		run_for_day(d)
 	else:
 		d2 = str_to_date(args.manual[1])
@@ -138,32 +117,34 @@ def run_manual():
 ###########################
 
 # obtenemos los argumentos con el uso del parseador..
-parser = ArgumentParser()
-parser.add_argument('-t', '--test',
-	action="store_true",
-	dest="test",
-	default=False,
-	help='Runs in test mode')
-parser.add_argument('-m', '--manual',
-	nargs='+',
-	# http://argparse.googlecode.com/svn/trunk/doc/add_argument.html#metavar
-	metavar=('INITIAL_DATE', 'FINAL_DATE'),
-	dest="manual",
-	default=False,
-	help='Manually process a certain volume of logs between 2 dates.\n' + \
-		'e.g. main.py -m 20130101 20130327 -> ' + \
-		'This will process all logfiles between 1st Jan 2013 and 27th Mar 2013')
-args = parser.parse_args()
-
-
+from helpers.parser_helper import init_argparser
+args = init_argparser(
+	test='Runs in test mode',
+	manual='Manually process a certain volume of logs between 2 dates.\n'
+		'e.g. main.py -m 20130101 20130327 -> '
+		'This will process all logfiles between 1st Jan 2013 and 27th Mar 2013,'
+		' both included.')
 test_mode = True if args.test else False
 manual_mode = True if args.manual else False
 
+# seteamos la instancia 'config' del módulo de configuración, la cual usaremos
+# a lo largo del script para interactuar con la configuración elegida.
+from helpers.config_helper import setConfig, getConfig
+setConfig(test_mode)
+
 # configuramos un logger para informarnos de la ejecucion en el archivo main-[fecha].log
-init_logger("main", test=test_mode)
+from helpers.logging_helper import *
+init_logger("main")
+
+
+# cargamos los módulos para cada tarea
+import transfer_log
+import run_wikisquilter
+import populate_analysis
+
 
 # guardamos la fecha actual en 'date' con los demás valores (hora, minuto..) seteados a 0
-date = get_now_to_zero()
+date = get_datenow_to_zero()
 
 
 # según estemos ejecutando en modo manual o no..

@@ -6,7 +6,7 @@
 import sys
 import os
 dirname, filename = os.path.split(os.path.abspath(__file__))
-sys.path.append(os.path.join(dirname, '../'))
+sys.path.append(os.path.join(dirname, '../../'))
 
 from helpers.config_helper import setConfig
 setConfig(test_mode=True)

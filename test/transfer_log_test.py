@@ -5,13 +5,19 @@
 
 from datetime import date
 
-from test_helper import *
+import test_helper
 from helpers.logging_helper import init_logger
-from transfer_log import run
+import transfer_log
 
+init_logger("transfer_log")
 
-init_logger("transfer_log", test=True)
+# vamos a descargar logs para 3 fechas..
 
-day = date.today().replace(year=2013, month=01, day=10)
+day = date.today().replace(year=2013, month=01, day=01)
+transfer_log.run(day)
 
-run(day, test=True)
+day = date.today().replace(year=2013, month=01, day=02)
+transfer_log.run(day)
+
+day = date.today().replace(year=2013, month=01, day=05)
+transfer_log.run(day)

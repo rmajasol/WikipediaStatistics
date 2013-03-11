@@ -6,7 +6,7 @@
 from datetime import datetime, timedelta
 
 
-def get_now_to_zero():
+def get_datenow_to_zero():
 	"""
 	Devuelve la fecha actual seteando a 0 los argumentos de la
 	función 'replace'
@@ -22,7 +22,7 @@ def str_to_date(str):
 	Obtenemos un objeto de tipo 'date' a partir de un string
 	con el formato de fecha YYYYMMDD
 	"""
-	date = get_now_to_zero()
+	date = get_datenow_to_zero()
 
 	year = int(str[:4])
 	month = int(str[4:6])

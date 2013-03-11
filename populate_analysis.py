@@ -2,29 +2,20 @@
 # -*- coding: utf8 -*-
 
 import re
-from helpers.config_helper import Config
-from helpers.logging_helper import *
-from helpers.mysql_helper import *
+from helpers.utils import is_empty
+from helpers.config_helper import getConfig
+from helpers.logging_helper import log_msg2, log_msg3, log_msg4, log_msg_ok2, log_msg_ok3, log_msg_ok4
+from helpers.mysql_helper import exec_mysql
 
-db_name = ""
-TXT_FILE = Config().get_dir_tmp() + "dumped.txt"
+DB_NAME = getConfig().db_name_analysis
+TEST_MODE = getConfig().test_mode
+TXT_FILE = getConfig().get_dumped_txt_filename()
 
 # indica el año del txt donde se vuelca el resultado de la query a squidlogs
 txt_year = ""
 
 # indica si se crearon ya las tablas nuevas
 new_tables_created = False
-
-# indica si este módulo se ejecuta en modo test o no
-test_mode = False
-
-
-def is_empty(filename):
-	"""
-	mira si un fichero esta vacío
-	"""
-	f = open(filename)
-	return f.readline() == ""
 
 
 def get_table_name_year(table_name):
@@ -35,7 +26,7 @@ def get_table_name_year(table_name):
 	return table_name + txt_year
 
 
-def wsq_to_txt(table_name):
+def wsq_to_txt(table_name, date):
 	"""
 	Vuelca en tmp/dumped.txt el resultado de la query a la BD squidlogs
 	"""
@@ -43,21 +34,24 @@ def wsq_to_txt(table_name):
 		query = "select date(f_date_time), substr(dayname(f_date_time),1,2), " + \
 			"f_lang_id, f_ns_id, count(*) " + \
 			"from Filtered where f_action_id is null " + \
+			"and date(f_date_time) = '" + date.strftime('%Y-%m-%d') + "' " + \
 			"group by date(f_date_time), f_lang_id, f_ns_id;"
 	elif(table_name == 'saved'):
 		query = "select date(f_date_time), substr(dayname(f_date_time),1,2), " + \
 			"f_lang_id, f_ns_id, count(*) " + \
 			"from Filtered where f_action_id = 2 " + \
+			"and date(f_date_time) = '" + date.strftime('%Y-%m-%d') + "' " + \
 			"group by date(f_date_time), f_lang_id, f_ns_id;"
 	elif(table_name == 'actions'):
 		query = "select date(f_date_time), substr(dayname(f_date_time),1,2), " + \
 			"f_action_id, f_lang_id, f_ns_id, count(*) " + \
 			"from Filtered where f_action_id in (0, 1, 3, 4) " + \
+			"and date(f_date_time) = '" + date.strftime('%Y-%m-%d') + "' " + \
 			"group by date(f_date_time), f_action_id, f_lang_id, f_ns_id;"
 
 	log_msg4("Creando dump para " + table_name)
 
-	exec_mysql_query('squidlogs', query, dumped=True)
+	exec_mysql(getConfig().db_name_squidlogs, query=query, dumped=True)
 
 	log_msg_ok4()
 
@@ -69,7 +63,7 @@ def is_new_year(table_name):
 	"""
 	# si el fichero no tiene nada devolvemos False para no crear luego una tabla vacia
 	if is_empty(TXT_FILE):
-		log_msg4("No se puede obtener el año del dump.txt vacío!!")
+		log_msg4("WARNING: No se puede obtener el año del dump.txt vacío!!")
 		return False
 	else:
 		# si el fichero no está vacío lo leemos para comprobar el año
@@ -87,7 +81,7 @@ def is_new_year(table_name):
 		# miramos si en la lista de procesados (logs.processed)
 		# aparece alguno ya procesado para el año del txt,
 		# lo cual quiere decir que ya existe la tabla
-		return Config().year_not_exists(txt_year, test_mode)
+		return getConfig().year_not_exists_in_list(txt_year, 'analysis')
 
 
 def create_table(table_name):
@@ -110,7 +104,7 @@ def create_table(table_name):
 			");" + \
 			"alter table " + table_name_year + " add index (day, dayWeek, lang, ns);"
 
-	exec_mysql_query(db_name, query)
+	exec_mysql(DB_NAME, query=query)
 
 
 def create_tables():
@@ -137,7 +131,7 @@ def txt_to_table(table_name):
 
 	# si el fichero no tiene nada no hay nada que pasar a la BD
 	if is_empty(TXT_FILE):
-		log_msg4("No se populó la tabla. dump.txt vacío!!")
+		log_msg4("WARNING: No se populó la tabla. dump.txt vacío!!")
 		return
 
 	# http://stackoverflow.com/questions/3971541/what-file-and-directory-permissions-are-required-for-mysql-load-data-infile
@@ -147,18 +141,18 @@ def txt_to_table(table_name):
 
 	log_msg4("Volcando sobre " + table_name_year)
 
-	exec_mysql_query(db_name, query, options=['local-infile'])
+	exec_mysql(DB_NAME, query=query, options=['local-infile'])
 
 	log_msg_ok4()
 
 
-def populate(table_name):
+def populate(table_name, date):
 	"""
 	Realiza todo el proceso para popular cada tabla
 	"""
 	log_msg3("Populando " + table_name)
 
-	wsq_to_txt(table_name)
+	wsq_to_txt(table_name, date)
 
 	# si es un nuevo año se crea una nueva tabla
 	if(is_new_year(table_name) and not new_tables_created):
@@ -170,28 +164,27 @@ def populate(table_name):
 
 
 #
+# RUN
 #
-#
-def run(date, test):
+def run(date):
 	"""
 	POPULA VISITEDYYYY, SAVEDYYYY y ACTIONSYYYY
 	(YYYY corresponde al año, por ejemplo 'SAVED2013')
 	"""
-	global test_mode
-	test_mode = test
-
-	# si estamos ejecutando en modo test se populará la B.D. test_analysis
-	global db_name
-	db_name = "test_analysis" if test_mode else "analysis"
-
 	global new_tables_created
 	new_tables_created = False
 
-	log_msg2("Populando " + db_name)
+	analysis_processed = getConfig().is_processed_for(date, 'analysis')
 
-	populate('visited')
-	populate('saved')
-	populate('actions')
-	Config().add_to_processed_list(date, test_mode)
-
-	log_msg_ok2()
+	if not analysis_processed:
+		log_msg2('Populando analysis')
+		populate('visited', date)
+		populate('saved', date)
+		populate('actions', date)
+		getConfig().add_to_processed_list(date, 'analysis')
+		log_msg_ok2()
+	else:
+		log_msg2(
+			'La fecha ' + date.strftime('%Y-%m-%d') + ' ya fue anteriormente '
+			'procesada para analysis.',
+			state='processed')

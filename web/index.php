@@ -55,11 +55,16 @@ the containing block is <html> -->
 					select the 'ES' edition and 'visited' action.
 				</p>
 
+				<p>
+					<b>Notice:</b> Currently test data only available, so <b>the graphs data are not real</b>. If a point on the graph
+					is 0 means that the data was not yet processed by the automation system for the given date.
+				</p>
+
 				<h1>Tips:</h1>
 				<ul>
 					<li>When a selector is focused, you only have to type the first
 						few letters of your choice.</li>
-						<li>You can change date range without losing the already drawed graphs</li>
+						<li>You can change date range without losing the already drawn graphs</li>
 						<li>You can see the graphs drawn by year, month or day depending on the chosen
 							format for dates. From highest to lowest priority, the formats are:
 							<ul>
@@ -72,7 +77,7 @@ the containing block is <html> -->
 
 					<h1>Shortcuts:</h1>
 					<ul>
-						<li><b>TAB</b>: Moves between selectors and draw new graphs</li>
+						<li><b>TAB</b>: Moves between selectors and draws new graphs</li>
 						<li><b>Backspace</b>: Deletes previous graph for the focused selector</li>
 					</ul>
 				</div>

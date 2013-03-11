@@ -21,20 +21,24 @@ def init_argparser(**kwargs):
 				"en el equipo remoto"
 		)
 	"""
-	test = ""
-	date = ""
+	test = None
+	date = None
+	manual = None
+	database = None
 
 	for key in kwargs:
 		if key == 'test':
 			test = kwargs[key]
-			print test
 		elif key == 'date':
 			date = kwargs[key]
+		elif key == 'manual':
+			manual = kwargs[key]
+		elif key == 'database':
+			database = kwargs[key]
 
 	parser = ArgumentParser()
 
 	if test:
-		# print test + "aaaaaa"
 		parser.add_argument('-t', '--test',
 			action="store_true",
 			dest="test",
@@ -42,12 +46,30 @@ def init_argparser(**kwargs):
 			help=test)
 
 	if date:
-		# print date
 		parser.add_argument(
 			nargs="+",
 			metavar=('INITIAL_DATE', 'FINAL_DATE'),
 			dest="date",
 			default=False,
 			help=date)
+
+	if manual:
+		parser.add_argument('-m', '--manual',
+			nargs='+',
+			# http://argparse.googlecode.com/svn/trunk/doc/add_argument.html#metavar
+			metavar=('INITIAL_DATE', 'FINAL_DATE'),
+			dest="manual",
+			default=False,
+			help=manual)
+
+	if database:
+		parser.add_argument('-d', '--database',
+			required=True,
+			nargs=1,
+			# http://argparse.googlecode.com/svn/trunk/doc/add_argument.html#metavar
+			metavar=('DATABASE_NAME'),
+			dest="database",
+			default=False,
+			help=database)
 
 	return parser.parse_args()

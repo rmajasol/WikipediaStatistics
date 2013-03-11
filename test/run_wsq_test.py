@@ -5,13 +5,19 @@
 
 from datetime import date
 
-from test_helper import *
+import test_helper
 from helpers.logging_helper import init_logger
-from run_wikisquilter import run
+import run_wikisquilter
 
+init_logger('run_wsq')
 
-init_logger("run_wsq", test=True)
+# vamos a procesar WikiSquilter sobre 3 logs..
 
-day = date.today().replace(year=2012, month=02, day=20)
+day = date.today().replace(year=2013, month=01, day=01)
+run_wikisquilter.run(day)
 
-run(day, test=True)
+day = date.today().replace(year=2013, month=01, day=02)
+run_wikisquilter.run(day)
+
+day = date.today().replace(year=2013, month=01, day=05)
+run_wikisquilter.run(day)

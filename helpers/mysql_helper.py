@@ -3,12 +3,12 @@
 
 # Nos ayudará para interactuar con la BD
 
-from config_helper import Config
 from exec_helper import exec_proc
+from helpers.config_helper import getConfig
 
 
-DB_USER = Config().get_db_user()
-DB_PASS = Config().get_db_password()
+DB_USER = getConfig().get_db_user()
+DB_PASS = getConfig().get_db_password()
 
 
 def create_sql_file(query):
@@ -16,7 +16,7 @@ def create_sql_file(query):
 	Crea un archivo [carpeta_archivos_temporales]/query.sql con una query dada.
 	Finalmente se devuelve nombre del archivo .sql junto a su ruta absoluta
 	"""
-	sql_file = Config().get_dir_tmp() + "query.sql"
+	sql_file = getConfig().get_dir_tmp() + "query.sql"
 
 	# escribimos la query en un .sql temporal
 	f = open(sql_file, "w")
@@ -26,19 +26,21 @@ def create_sql_file(query):
 	return sql_file
 
 
-def exec_mysql_query(database, query, **kwargs):
+def exec_mysql(database, **kwargs):
 	"""
-	Ejecuta la query escrita en el archivo query.sql
+	Ejecuta la query, ya sea especificada en un String o se cargue desde un archivo .sql
 
 	http://www.saltycrane.com/blog/2008/01/how-to-use-args-and-kwargs-in-python/
 	**kwargs puede estar vacío o contener un hash con las
 	siguientes claves:
+		* query: indica la query a ejecutar
 		* dumped: si tiene valor 'True' volcará el resultado
 			de la query sobre un fichero dumped.txt
 		* options: esta clave tiene como valor un array de
 			Strings, de modo que en el comando mysql 'cmd' se
 			inyectarán tantas opciones de ejecución como
 			elementos posea dicho array
+		* sql_file: indica el archivo .sql a ejecutar (en lugar de una query)
 
 	Por ejemplo si kwargs['options'] = ['local-infile'], entonces
 	se ejecutaría así:
@@ -51,6 +53,8 @@ def exec_mysql_query(database, query, **kwargs):
 	# Dejamos estos 2 valores por defecto
 	options = []
 	dumped = False
+	query = None
+	sql_file = None
 
 	# seteamos cada variable según el contenido de kwargs
 	for key in kwargs:
@@ -58,9 +62,13 @@ def exec_mysql_query(database, query, **kwargs):
 			dumped = kwargs[key]
 		elif key == 'options':
 			options = kwargs[key]
+		elif key == 'query':
+			query = kwargs[key]
+		elif key == 'sql_file':
+			sql_file = kwargs[key]
 
-	# creamos el archivo query.sql
-	sql_file = create_sql_file(query)
+	# creamos el archivo query.sql si no recibimos la opción sql_file='archivo.sql'
+	sql_file = create_sql_file(query) if not sql_file else sql_file
 
 	# construimos el comando 'cmd'
 	cmd = "mysql "
@@ -72,7 +80,7 @@ def exec_mysql_query(database, query, **kwargs):
 			" < " + sql_file
 
 	if dumped:
-		cmd += 	" > " + Config().get_dir_tmp() + "dumped.txt"
+		cmd += 	" > " + getConfig().get_dumped_txt_filename()
 
 	# ejecutamos el comando
 	exec_proc(cmd)
